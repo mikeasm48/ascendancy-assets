@@ -1,0 +1,11 @@
+# артефакты сборки Blender
+blends/
+*.blend
+*.blend1
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

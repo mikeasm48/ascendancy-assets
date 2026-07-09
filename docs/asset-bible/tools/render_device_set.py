@@ -37,7 +37,9 @@ def parse_args():
 
 
 def find_device_object():
-    for obj in bpy.data.objects:
+    preview = bpy.data.objects.get("DEV_preview")
+    candidates = ([preview] if preview else []) + list(bpy.data.objects)
+    for obj in candidates:
         for mod in obj.modifiers:
             if mod.type == "NODES" and mod.node_group \
                     and mod.node_group.name == "GN_Device_Master":

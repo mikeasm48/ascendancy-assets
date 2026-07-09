@@ -14,24 +14,26 @@
 |---|---|
 | [00-pipeline.md](00-pipeline.md) | Архитектура Geometry Nodes, naming conventions, рендер-пайплайн |
 | [01-device-taxonomy.md](01-device-taxonomy.md) | Общая таксономия устройств — одинакова для всех рас |
+| [02-device-set.md](02-device-set.md) | Генерация набора устройств из DefaultTechCatalog для Humans/Shuffie |
 | [races/humans.md](races/humans.md) | Стилевой кит расы Humans |
 | [races/shuffie.md](races/shuffie.md) | Стилевой кит расы Shuffie |
 | [races/_template.md](races/_template.md) | Шаблон — копируется при добавлении новой расы |
-| [tools/geonodes_scaffold.py](tools/geonodes_scaffold.py) | Скрипт: создаёт каркас нод-групп в .blend |
+| [tools/geonodes_scaffold.py](tools/geonodes_scaffold.py) | Скрипт: создаёт каркас нод-групп в .blend (заглушки, для ручного наполнения) |
+| [tools/build_device_library.py](tools/build_device_library.py) | Скрипт: полная генерация наборов устройств + экспорт GLB per race |
+| [tools/devices.json](tools/devices.json) | Каталог устройств (из DefaultTechCatalog.java) |
 | [tools/render_device_set.py](tools/render_device_set.py) | Batch-рендер набора устройств в PNG |
 
 ## Quick start
 
 ```bash
-# 1. Создать каркас нод-групп в новом .blend
-blender -b -P tools/geonodes_scaffold.py -- --out blends/devices.blend
-
-# 2. Наполнить стилевые киты вручную в Blender (см. races/*.md)
-
-# 3. Отрендерить полный набор устройств расы
-blender -b blends/devices.blend -P tools/render_device_set.py -- \
-    --race humans --seeds 8 --out renders/humans/
+# Сгенерировать наборы устройств (36 корабельных × humans/core)
+# и экспортировать device_constructor.glb в ассеты игры
+blender -b -P tools/build_device_sets.py -- \
+    --races humans,core --assets-dir ~/.ascendancy/assets/races
 ```
+
+Подробности и маппинг Java-каталога — в [02-device-set.md](02-device-set.md).
+Ручной путь (каркас-заглушки + наполнение в Blender) — `tools/geonodes_scaffold.py`.
 
 ## Добавление новой расы
 

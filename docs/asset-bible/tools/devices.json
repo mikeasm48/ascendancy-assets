@@ -1,0 +1,257 @@
+{
+  "comment": "Каталог корабельных устройств (из DefaultTechCatalog.java, без Orbital_/Space_ — орбитальные генерируются отдельно). Источник правды для генерации: tools/device_catalog.py (порядок = индекс в device_constructor.glb).",
+  "devices": [
+    {
+      "id": "ENGINE_1",
+      "name": "Tonklin Motor",
+      "recipe": "engine",
+      "level": 1,
+      "index": 0
+    },
+    {
+      "id": "ENGINE_2",
+      "name": "Ion Banger",
+      "recipe": "engine",
+      "level": 2,
+      "index": 1
+    },
+    {
+      "id": "ENGINE_3",
+      "name": "Graviton Projector",
+      "recipe": "engine",
+      "level": 3,
+      "index": 2
+    },
+    {
+      "id": "INTERSTELLAR_ENGINE_1",
+      "name": "Star Lane Drive",
+      "recipe": "star_lane",
+      "level": 1,
+      "index": 3
+    },
+    {
+      "id": "INTERSTELLAR_ENGINE_2",
+      "name": "Star Lane Adv. Drive",
+      "recipe": "star_lane",
+      "level": 2,
+      "index": 4
+    },
+    {
+      "id": "INTERSTELLAR_ENGINE_3",
+      "name": "Star Lane Hyper Drive",
+      "recipe": "star_lane",
+      "level": 3,
+      "index": 5
+    },
+    {
+      "id": "ENGINE_INERTIA_NEGATOR",
+      "name": "Inertia Negator",
+      "recipe": "inertia",
+      "level": 0,
+      "index": 6
+    },
+    {
+      "id": "GENERATOR_1",
+      "name": "Proton Shaver",
+      "recipe": "generator",
+      "level": 1,
+      "index": 7
+    },
+    {
+      "id": "GENERATOR_2",
+      "name": "Subatomic Scoop",
+      "recipe": "generator",
+      "level": 2,
+      "index": 8
+    },
+    {
+      "id": "GENERATOR_3",
+      "name": "Quark Express",
+      "recipe": "generator",
+      "level": 3,
+      "index": 9
+    },
+    {
+      "id": "GENERATOR_4",
+      "name": "Van Creeg Hypersplicer",
+      "recipe": "generator",
+      "level": 4,
+      "index": 10
+    },
+    {
+      "id": "GENERATOR_5",
+      "name": "Nanotwirler",
+      "recipe": "generator",
+      "level": 5,
+      "index": 11
+    },
+    {
+      "id": "SHIELD_1",
+      "name": "Ion Wrap",
+      "recipe": "shield",
+      "level": 1,
+      "index": 12
+    },
+    {
+      "id": "SHIELD_SMART_1",
+      "name": "Deactotron",
+      "recipe": "shield",
+      "level": 2,
+      "index": 13
+    },
+    {
+      "id": "SHIELD_TIME_1",
+      "name": "Wave Scatterer",
+      "recipe": "shield",
+      "level": 3,
+      "index": 14
+    },
+    {
+      "id": "SHIELD_SMART_2",
+      "name": "Hyperwave Nullifier",
+      "recipe": "shield",
+      "level": 4,
+      "index": 15
+    },
+    {
+      "id": "SHIELD_TIME_2",
+      "name": "Nanoshield",
+      "recipe": "shield",
+      "level": 5,
+      "index": 16
+    },
+    {
+      "id": "SCANNER_1",
+      "name": "Tonklin Frequency Analyzer",
+      "recipe": "scanner",
+      "level": 1,
+      "index": 17
+    },
+    {
+      "id": "SCANNER_2",
+      "name": "Subspace Phase Array",
+      "recipe": "scanner",
+      "level": 2,
+      "index": 18
+    },
+    {
+      "id": "SCANNER_3",
+      "name": "Aural Cloud Constructor",
+      "recipe": "scanner",
+      "level": 3,
+      "index": 19
+    },
+    {
+      "id": "SCANNER_4",
+      "name": "Hyperwave Tympanum",
+      "recipe": "scanner",
+      "level": 4,
+      "index": 20
+    },
+    {
+      "id": "SCANNER_5",
+      "name": "Nanowave Decoupling Net",
+      "recipe": "scanner",
+      "level": 5,
+      "index": 21
+    },
+    {
+      "id": "WEAPON_LAZER_BEAM_1",
+      "name": "Lazer Gun",
+      "recipe": "beam:lazer",
+      "level": 1,
+      "index": 22
+    },
+    {
+      "id": "WEAPON_LAZER_BEAM_2",
+      "name": "Advanced Lazer Gun",
+      "recipe": "beam:lazer",
+      "level": 2,
+      "index": 23
+    },
+    {
+      "id": "WEAPON_LAZER_BEAM_3",
+      "name": "Hyper Lazer (Ueberlaser)",
+      "recipe": "beam:lazer",
+      "level": 3,
+      "index": 24
+    },
+    {
+      "id": "WEAPON_PHAZER_BEAM_1",
+      "name": "Phazer (Plasmatron)",
+      "recipe": "beam:phazer",
+      "level": 1,
+      "index": 25
+    },
+    {
+      "id": "WEAPON_PHAZER_BEAM_2",
+      "name": "Advanced Phazer",
+      "recipe": "beam:phazer",
+      "level": 2,
+      "index": 26
+    },
+    {
+      "id": "WEAPON_PHAZER_BEAM_3",
+      "name": "Hyper Phazer",
+      "recipe": "beam:phazer",
+      "level": 3,
+      "index": 27
+    },
+    {
+      "id": "WEAPON_LAZER_RAPID_1",
+      "name": "Lazer Turret (Hypersphere)",
+      "recipe": "rapid:lazer",
+      "level": 1,
+      "index": 28
+    },
+    {
+      "id": "WEAPON_LAZER_RAPID_2",
+      "name": "Adv. Lazer Turret",
+      "recipe": "rapid:lazer",
+      "level": 2,
+      "index": 29
+    },
+    {
+      "id": "WEAPON_LAZER_RAPID_3",
+      "name": "Hyper Lazer Turret",
+      "recipe": "rapid:lazer",
+      "level": 3,
+      "index": 30
+    },
+    {
+      "id": "WEAPON_PHAZER_RAPID_1",
+      "name": "Phazer Rapid",
+      "recipe": "rapid:phazer",
+      "level": 1,
+      "index": 31
+    },
+    {
+      "id": "WEAPON_PHAZER_RAPID_2",
+      "name": "Adv. Phazer Rapid",
+      "recipe": "rapid:phazer",
+      "level": 2,
+      "index": 32
+    },
+    {
+      "id": "WEAPON_PHAZER_RAPID_3",
+      "name": "Nanomanipulator",
+      "recipe": "rapid:phazer",
+      "level": 3,
+      "index": 33
+    },
+    {
+      "id": "AUX_COLONY_BASE",
+      "name": "Colony Base (Colonizer)",
+      "recipe": "aux:colony",
+      "level": 0,
+      "index": 34
+    },
+    {
+      "id": "AUX_INVASION_MODULE",
+      "name": "Invasion Module",
+      "recipe": "aux:invasion",
+      "level": 0,
+      "index": 35
+    }
+  ]
+}

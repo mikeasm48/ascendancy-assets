@@ -179,7 +179,12 @@ def make_scene(master):
         lo.location = loc
         sc.collection.objects.link(lo)
 
-    sc.render.engine = "BLENDER_EEVEE_NEXT"
+    for eng in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE"):
+        try:
+            sc.render.engine = eng
+            break
+        except TypeError:
+            continue
     sc.render.film_transparent = True
     sc.render.resolution_x = sc.render.resolution_y = 1024
     sc.render.image_settings.file_format = "PNG"

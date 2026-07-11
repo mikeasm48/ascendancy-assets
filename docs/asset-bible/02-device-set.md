@@ -72,3 +72,31 @@ blender -b -P tools/build_device_sets.py -- \
 `tools/build_device_library.py` (Geometry Nodes: архетипы × стилевые киты)
 оставлен как экспериментальный — для процедурной вариативности по seed.
 Для продакшн-наборов используется `build_device_sets.py`.
+
+## Набор Shuffie/bionics: заимствование из конструктора кораблей
+
+Устройства Shuffie НЕ генерируются процедурно — собираются из частей
+`bionics/ships/shipyard_constructor.glb` скриптом
+`tools/build_bionics_device_set.py` (флот — эталон стиля):
+
+| Устройства | Источник |
+|---|---|
+| WEAPON_LAZER_BEAM_* | Laser turret |
+| WEAPON_PHAZER_BEAM_* | Wave cannon |
+| WEAPON_*_RAPID_* | Gauss cannon (семейства разведены тинтом) |
+| ENGINE_1..3 / INERTIA_NEGATOR | Engine 1..3 / Engine 4 |
+| INTERSTELLAR_ENGINE_* | Hull 8 |
+| GENERATOR_1..5 | Hull 2 |
+| SHIELD_* (5 шт.) | Panel 4, развёрнута вертикально |
+| SCANNER_1..5 | Antenna |
+| AUX_COLONY_BASE | Saucer сверху + Conjunction 2 снизу |
+| AUX_INVASION_MODULE | Shuttle 1.001 |
+
+Поколения различаются размером (масштаб в трансформе узла) и
+категорийным multiply-тинтом поверх фарфоровой текстуры (сила растёт с
+уровнем; экспортируется как glTF baseColorFactor). Выход:
+`bionics/devices/device_constructor.glb` — 36 узлов в порядке
+`device_catalog.RECIPES`, extras как у humans/core, ~2.8MB (текстуры
+<=512). Контрольный лист: `renders/preview/approval_devices_bionics_v1.png`.
+Если что-то окажется недостаточно выразительным — точечно заменяем на
+оригинальные модели.

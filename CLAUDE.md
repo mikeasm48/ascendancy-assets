@@ -75,9 +75,11 @@
   bionics/buildings/building_constructor_v2.glb (68 узлов, <=10MB,
   весь орбитальный ряд: 4 дока/3 щита/8 орудий из корабельных турелей;
   tools/build_shuffie_building_set.py, лист approval_buildings_shuffie_v2.png)
-- [ ] Набор устройств для расы Shuffie (папка ассетов — `bionics/`;
-  стиль: races/shuffie.md — белый «фарфор», непрерывная кривизна, акцент
-  только в углублениях)
+- [x] Набор устройств Shuffie: 36 устройств из частей конструктора
+  кораблей (tools/build_bionics_device_set.py -> bionics/devices/
+  device_constructor.glb; оружие = те же турели, что в орбитальном ряду
+  зданий; поколения - размер + категорийный тинт baseColorFactor;
+  лист approval_devices_bionics_v1.png)
 - [ ] Интеграция device_constructor.glb в игру (адресация по индексу или
   extras.device_id)
 - [ ] Интеграция building_constructor_<style>.glb в игру: на BuildingType -

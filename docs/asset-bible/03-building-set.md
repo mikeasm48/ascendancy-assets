@@ -8,7 +8,7 @@
   (`.../model/colony/OrbitalCatalog.java`), 15 шт. (4 дока, 3 щита,
   3 лазера, 3 фазера, 2 скорострельных фазера).
 
-Референсы — `refs/buildings/*_humans_*`. Примеры там двух видов, поэтому
+Референсы — `refs/buildings/humans/`. Примеры там двух видов, поэтому
 каждая позиция генерируется в **двух несмешиваемых стилевых вариантах**:
 
 - **industrial** — брутальный индустриальный (рефы Factory_1, ColonyBase_1,
@@ -90,3 +90,19 @@ OrbitalCatalog, у пропсов `PROP_*`), `display_name`, `style`, `kind`
 бетон `#9AA0A6` + сталь + ржавые пояса, у scifi белый металл `#E2E6E9` +
 серебро; стекло — blend с alpha 0.45/0.55, свечения — emission 1.5–4.
 Shade smooth + EdgeSplit 42° на всех узлах.
+
+## Shuffie: объединённый набор v2
+
+Для Shuffie здания НЕ генерируются процедурно — собираются из готовых
+city-set'ов скриптом `tools/build_shuffie_building_set.py`: доминанты из
+текущего сета bionics, мелкие групповые пропсы и «инопланетные» формы из
+бионического city-set'а (ранее временно у Humans), орбитальные док и щит
+из `refs/buildings/Shuffie/*.glb`, орбитальное оружие — корабельные
+турели флота (Laser turret / Wave cannon / Gauss cannon) в серебре
+палитры строений. Палитра гармонизирована с флотом (эталон): золото ->
+бирюза, графитовые врезки; текстуры бирюза/лайм сохранены. Выход:
+`bionics/buildings/building_constructor_v2.glb` (68 узлов, <=10MB:
+текстуры ужаты, децимация по источнику, уровни делят меш; те же extras +
+kind=variant у запасных групп). Подробный маппинг и палитра —
+`races/shuffie.md` §5b; контрольный лист —
+`renders/preview/approval_buildings_shuffie_v2.png`.

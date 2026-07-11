@@ -23,9 +23,12 @@
 # Выход (текущий building_constructor.glb НЕ перезаписывается):
 #   <assets-dir>/bionics/buildings/building_constructor_v2.glb
 #
-# Узлы: 14 доминант (BuildingType) + 8 пропсов + док + щит + 31 вариант
-# (незадействованные группы обоих сетов, kind=variant). Extras на каждом:
-# building_id, display_name, kind, level, source.
+# Узлы: 14 доминант (BuildingType) + 8 пропсов + 15 орбитальных
+# (4 дока: 2 органических DOCK2 + 2 верфи DOCK; 3 щита размерами;
+# 8 орудий из корабельных Laser turret / Wave cannon / Gauss cannon
+# в серебре палитры строений) + 31 вариант (kind=variant). Extras:
+# building_id, display_name, kind, level, source. Бюджет размера:
+# текстуры <=512px, децимация тяжёлых мешей (DECIMATE_CAP).
 
 import os
 import sys
@@ -40,8 +43,24 @@ REFS_SHUFFIE = os.path.normpath(os.path.join(HERE, "..", "refs", "buildings",
 
 SRC_A = "~/.ascendancy/assets/races/bionics/buildings/building_constructor.glb"
 SRC_B = "~/.ascendancy/assets/races/humans/buildings/building_constructor.glb"
+SRC_SHIPS = "~/.ascendancy/assets/races/bionics/ships/shipyard_constructor.glb"
 SRC_DOCK = os.path.join(REFS_SHUFFIE, "SpaceDock_shuffie_1.glb")
+SRC_DOCK2 = os.path.join(REFS_SHUFFIE, "SpaceShield_shuffie_2.glb")  # органический док
 SRC_SHIELD = os.path.join(REFS_SHUFFIE, "SpaceShield_shuffie_1.glb")
+
+MAX_TEX = 512          # даунскейл цветовых текстур (бюджет размера GLB)
+MAX_TEX_DATA = 256     # normal/MR и прочие Non-Color карты
+
+# Децимация по ИСТОЧНИКУ: (потолок треугольников, нижний порог ratio).
+# Плотная органика (B, купол щита) терпит сильный collapse; тонкие
+# многослойные оболочки сета A при ratio<0.5 разрушаются — им floor выше.
+DECIMATE = {
+    "A": (8000, 0.5), "B": (6000, 0.1), "DOCK": (9000, 0.1),
+    "DOCK2": (9000, 0.2), "SHIELD": (9000, 0.1), "SHIPS": (4000, 0.5),
+}
+VARIANT_CAP_MUL = 0.6  # запасные варианты можно жать сильнее
+# нетекстурированные источники: UV-слои не нужны (экономия ~8 байт/вершина)
+NO_UV_SRC = {"A", "DOCK", "DOCK2", "SHIPS"}
 
 # (building_id, display_name, source, имя группы в GLB, kind, level, scale)
 MAPPING = [
@@ -69,11 +88,44 @@ MAPPING = [
     ("PROP_SPIRE", "Spire", "B", "Spire_0", "prop", 0, 1.0),
     ("PROP_FACILITY", "Facility", "B", "Facility 4_2", "prop", 0, 1.0),
     ("PROP_PYLON", "Pylon", "A", "Building_04.001_6", "prop", 0, 1.0),
-    # орбитальные (форма как есть, цвет гармонизирован; уровни — скейлом в игре)
-    ("SPACE_DOCK", "Orbital Dock", "DOCK", "Colonial Shipyard", "orbital", 0, 0.03),
-    ("SPACE_SHIELD", "Orbital Shield", "SHIELD",
-     "Weighted_Sphere.obj.cleaner.materialmerger.gles", "orbital", 0, 0.0009),
+    # орбитальные доки: 2 малых — органический кластер (DOCK2),
+    # 2 больших — верфь-ферма (DOCK); размеры растут с уровнем
+    ("SPACE_DOCK_SMALL", "Small Orbital Dock", "DOCK2", "Mball.192_0",
+     "orbital", 1, 0.052),
+    ("SPACE_DOCK_MEDIUM", "Medium Orbital Dock", "DOCK2", "Mball.192_0",
+     "orbital", 2, 0.072),
+    ("SPACE_DOCK_LARGE", "Large Orbital Dock", "DOCK", "Colonial Shipyard",
+     "orbital", 3, 0.032),
+    ("SPACE_DOCK_HUGE", "Huge Orbital Dock", "DOCK", "Colonial Shipyard",
+     "orbital", 4, 0.041),
+    # щиты: 3 уровня размером
+    ("SPACE_SHIELD_1", "Orbital Shield", "SHIELD",
+     "Weighted_Sphere.obj.cleaner.materialmerger.gles", "orbital", 1, 0.00065),
+    ("SPACE_SHIELD_2", "Advanced Orbital Shield", "SHIELD",
+     "Weighted_Sphere.obj.cleaner.materialmerger.gles", "orbital", 2, 0.00085),
+    ("SPACE_SHIELD_3", "Hyper Orbital Shield", "SHIELD",
+     "Weighted_Sphere.obj.cleaner.materialmerger.gles", "orbital", 3, 0.00105),
+    # орбитальное оружие: корабельные орудия флота, но в общей палитре
+    # строений (серебро) — цвета кораблей специально не переносим
+    ("ORBITAL_LASER_1", "Orbital Lazer", "SHIPS", "Laser turret_36",
+     "orbital", 1, 1.2),
+    ("ORBITAL_LASER_2", "Advanced Orbital Lazer", "SHIPS", "Laser turret_36",
+     "orbital", 2, 1.55),
+    ("ORBITAL_LASER_3", "Hyper Orbital Lazer", "SHIPS", "Laser turret_36",
+     "orbital", 3, 1.9),
+    ("ORBITAL_PHAZER_1", "Orbital Phazer", "SHIPS", "Wave cannon_35",
+     "orbital", 1, 1.1),
+    ("ORBITAL_PHAZER_2", "Advanced Orbital Phazer", "SHIPS", "Wave cannon_35",
+     "orbital", 2, 1.4),
+    ("ORBITAL_PHAZER_3", "Hyper Orbital Phazer", "SHIPS", "Wave cannon_35",
+     "orbital", 3, 1.75),
+    ("ORBITAL_PHAZER_RAPID_1", "Orbital Rapid Phazer", "SHIPS",
+     "Gauss cannon_45", "orbital", 1, 0.55),
+    ("ORBITAL_PHAZER_RAPID_2", "Advanced Orbital Rapid Phazer", "SHIPS",
+     "Gauss cannon_45", "orbital", 2, 0.7),
 ]
+# источники, чьим узлам назначается общий материал строений (серебро)
+SILVER_OVERRIDE_SRC = {"SHIPS"}
 EXCLUDE = {"Mercury-class"}  # пристыкованный корабль из dock-рефа не берём
 
 # Перекраска материалов сета A: tag -> (rgb 0..1, metallic, roughness)
@@ -202,22 +254,60 @@ def teal_shift_orange(materials):
         b.inputs["Roughness"].default_value = 0.3
 
 
-def assemble(group_empty, scale):
-    """Слить меши группы в один объект, посадить на z=0, центр в (0,0)."""
-    meshes = [o for o in mesh_children(group_empty) if o.name.split(".")[0]
-              not in EXCLUDE]
-    for o in meshes:
+def downscale_images(max_color, max_data):
+    """Ужать текстуры: цветовые до max_color, Non-Color (normal/MR) до
+    max_data. Отмасштабированный буфер подменяется свежим
+    generated-датаблоком (см. teal_shift_orange): иначе экспортёр
+    возьмёт исходные упакованные байты."""
+    import numpy as np
+    remap = {}
+    for img in list(bpy.data.images):
+        target = max_color if img.colorspace_settings.name == "sRGB" \
+            else max_data
+        if img.size[0] == 0 or max(img.size) <= target:
+            continue
+        img.scale(target, target)
+        px = np.empty(target * target * 4, dtype=np.float32)
+        img.pixels.foreach_get(px)
+        fresh = bpy.data.images.new(f"{img.name}_s", target, target,
+                                    alpha=True)
+        fresh.colorspace_settings.name = img.colorspace_settings.name
+        fresh.pixels.foreach_set(px)
+        fresh.update()
+        remap[img.name] = fresh
+    for m in bpy.data.materials:
+        if not m.node_tree:
+            continue
+        for n in m.node_tree.nodes:
+            if n.type == "TEX_IMAGE" and n.image and n.image.name in remap:
+                n.image = remap[n.image.name]
+
+
+def assemble(group_empty):
+    """Слить КОПИИ мешей группы в один объект (исходники не трогаем — одна
+    группа используется в нескольких уровнях), посадить на z=0, центр (0,0).
+    Масштаб уровня в меш НЕ запекается — уходит в трансформ узла, чтобы
+    уровни одного источника делили один меш в GLB."""
+    src = [o for o in mesh_children(group_empty) if o.name.split(".")[0]
+           not in EXCLUDE]
+    meshes = []
+    for o in src:
+        c = o.copy()
+        c.data = o.data.copy()
+        bpy.context.scene.collection.objects.link(c)
         mw = o.matrix_world.copy()
-        o.parent = None
-        o.matrix_world = mw
+        c.parent = None       # сначала снять родителя,
+        c.matrix_world = mw   # потом восстановить мировой трансформ
+        meshes.append(c)
     target = meshes[0]
     if len(meshes) > 1:
         with bpy.context.temp_override(
                 active_object=target,
                 selected_editable_objects=meshes):
             bpy.ops.object.join()
-    # мир -> меш, плюс масштаб
-    target.data.transform(Matrix.Scale(scale, 4) @ target.matrix_world)
+    # мир -> меш (сплит-нормали исходников сохраняем — иначе «плавятся»
+    # жёсткие пояса сета A и грани орудий)
+    target.data.transform(target.matrix_world)
     target.matrix_world = Matrix.Identity(4)
     # bbox: центр XY в 0, низ на z=0
     xs = [v.co for v in target.data.vertices]
@@ -230,6 +320,23 @@ def assemble(group_empty, scale):
     return target
 
 
+def decimate_now(obj, cap, floor):
+    """Сразу применить децимацию к мешу (не модификатором на экспорт),
+    чтобы уровни могли делить один меш. floor защищает силуэт."""
+    ntris = sum(len(p.vertices) - 2 for p in obj.data.polygons)
+    if ntris <= cap:
+        return
+    mod = obj.modifiers.new("Budget", "DECIMATE")
+    mod.ratio = max(cap / ntris, floor)
+    with bpy.context.temp_override(object=obj, active_object=obj):
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def strip_uvs(mesh):
+    while mesh.uv_layers:
+        mesh.uv_layers.remove(mesh.uv_layers[0])
+
+
 def main():
     a = parse_args()
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -237,24 +344,32 @@ def main():
     objs_a, mats_a = import_glb(SRC_A)
     objs_b, mats_b = import_glb(SRC_B)
     objs_d, mats_d = import_glb(SRC_DOCK)
+    objs_d2, mats_d2 = import_glb(SRC_DOCK2)
     objs_s, mats_s = import_glb(SRC_SHIELD)
-    sources = {"A": objs_a, "B": objs_b, "DOCK": objs_d, "SHIELD": objs_s}
+    objs_w, mats_w = import_glb(SRC_SHIPS)
+    sources = {"A": objs_a, "B": objs_b, "DOCK": objs_d, "DOCK2": objs_d2,
+               "SHIELD": objs_s, "SHIPS": objs_w}
     groups = {k: find_groups(v) for k, v in sources.items()}
 
     recolor(mats_a, RECOLOR_A)
     recolor(mats_d, RECOLOR_DOCK)
     gloss_textured(mats_b, GLOSS_B)
     teal_shift_orange(mats_s)
+    downscale_images(MAX_TEX, MAX_TEX_DATA)
+    silver = next(m for m in mats_a if m.name.startswith("Silver_01"))
 
     used = set()
     out_objs = []
     idx = 0
 
-    def place(obj, bld_id, disp, kind, level, source):
+    mesh_cache = {}  # (src, gname) -> готовый декимированный меш
+
+    def place(obj, bld_id, disp, kind, level, source, scale=1.0):
         nonlocal idx
-        obj.name = f"{idx:03d}_shuffie_{bld_id}"
+        obj.name = f"{idx:03d}_{bld_id}"
         row, col = divmod(idx, 6)
         obj.location = (col * 12.0, row * 12.0, 0.0)
+        obj.scale = (scale, scale, scale)
         obj["building_id"] = bld_id
         obj["display_name"] = disp
         obj["kind"] = kind
@@ -264,12 +379,33 @@ def main():
         out_objs.append(obj)
         idx += 1
 
-    for bld_id, disp, src, gname, kind, level, scale in MAPPING:
+    def node_for(src, gname, kind):
+        """Собрать (или переиспользовать) уникальный меш источника."""
+        key = (src, gname)
+        if key in mesh_cache:
+            obj = bpy.data.objects.new("node", mesh_cache[key])
+            bpy.context.scene.collection.objects.link(obj)
+            return obj
         g = groups[src].get(gname)
         if g is None:
             raise RuntimeError(f"группа не найдена: {src}/{gname}")
+        obj = assemble(g)
+        cap, floor = DECIMATE[src]
+        if kind == "variant":
+            cap = int(cap * VARIANT_CAP_MUL)
+        decimate_now(obj, cap, floor)
+        if src in NO_UV_SRC:
+            strip_uvs(obj.data)
+        if src in SILVER_OVERRIDE_SRC:  # орудия — в общую палитру строений
+            for slot in obj.material_slots:
+                slot.material = silver
+        mesh_cache[key] = obj.data
+        return obj
+
+    for bld_id, disp, src, gname, kind, level, scale in MAPPING:
         used.add((src, gname))
-        place(assemble(g, scale), bld_id, disp, kind, level, src)
+        place(node_for(src, gname, kind), bld_id, disp, kind, level, src,
+              scale)
 
     # оставшиеся группы обоих сетов — вариантами (богатство набора)
     for src in ("A", "B"):
@@ -277,7 +413,8 @@ def main():
             if (src, gname) in used or gname.split(".")[0] in EXCLUDE:
                 continue
             var_id = "VARIANT_" + gname.replace(" ", "_").replace(".", "_")
-            place(assemble(g, 1.0), var_id, gname, "variant", 0, src)
+            place(node_for(src, gname, "variant"), var_id, gname,
+                  "variant", 0, src)
 
     # выкидываем пустышки и неиспользованные меши (корабль из dock-рефа)
     for ob in list(bpy.data.objects):

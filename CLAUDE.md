@@ -72,9 +72,9 @@
 - [x] Здания Shuffie: объединённый набор v2 (текущий сет bionics +
   бионический city-set экс-Humans + орбитальные док/щит из
   refs/buildings/Shuffie), гармонизирован с флотом ->
-  bionics/buildings/building_constructor_v2.glb (55 узлов,
-  tools/build_shuffie_building_set.py, лист approval_buildings_shuffie_v2.png).
-  TODO: орбитальные лазеры/фазеры Shuffie
+  bionics/buildings/building_constructor_v2.glb (68 узлов, <=10MB,
+  весь орбитальный ряд: 4 дока/3 щита/8 орудий из корабельных турелей;
+  tools/build_shuffie_building_set.py, лист approval_buildings_shuffie_v2.png)
 - [ ] Набор устройств для расы Shuffie (папка ассетов — `bionics/`;
   стиль: races/shuffie.md — белый «фарфор», непрерывная кривизна, акцент
   только в углублениях)

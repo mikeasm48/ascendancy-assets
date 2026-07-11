@@ -8,6 +8,8 @@
 
 - `docs/asset-bible/02-device-set.md` — архитектура генератора устройств,
   команды запуска, маппинг каталога
+- `docs/asset-bible/03-building-set.md` — генератор зданий (BuildingType) и
+  орбитальных конструкций (OrbitalCatalog): 2 стиля industrial/scifi + пропсы
 - `docs/asset-bible/races/humans.md`, `races/shuffie.md` — стилевые киты рас
   (палитры/геометрия сверены с фактическими GLB игры)
 - `docs/asset-bible/refs/devices/README.md` — политика референсов
@@ -46,24 +48,31 @@
 
 ## Референсы
 
-- `docs/asset-bible/refs/devices/` — ужатые копии (≤1024px, GLB заменены
-  `*_preview.png`). Полноразмерные оригиналы: `~/java/ascendancy-refs-originals/`
-  (вне git). Скриншоты `*_core*.png` — оригиналы Ascendancy 1995, не трогать.
+- `docs/asset-bible/refs/devices/`, `refs/buildings/` — ужатые копии
+  (≤1024px, GLB заменены `*_preview.png`). Полноразмерные оригиналы:
+  `~/java/ascendancy-refs-originals/{devices,buildings}/` (вне git).
+  Скриншоты `*_core*.png` — оригиналы Ascendancy 1995, не трогать.
 
 ## Не коммитить
 
 - `blends/`, `*.blend` — артефакты сборки (в .gitignore)
 - сгенерированные GLB уходят в `~/.ascendancy/assets/` (вне репо)
 
-## Состояние и следующие задачи (на 2026-07-09)
+## Состояние и следующие задачи (на 2026-07-10)
 
 - [x] Наборы устройств humans + core: 36 корабельных, сгенерированы и
   согласованы (эталоны: `renders/preview/approval_humans_v14.png` — плюс
   более поздние правки оружия/aux в рецептах, `approval_core_v4.png`)
-- [ ] Орбитальные конструкции (`Orbital_*`, `Space_*` из DefaultTechCatalog
-  основного репо) — отдельный набор, исключены из device_constructor
+- [x] Здания + орбитальные конструкции Humans: 14 планетарных (BuildingType)
+  + 15 орбитальных (OrbitalCatalog) + 6 пропсов, каждый в 2 стилях
+  (industrial/scifi, не смешивать!) -> building_constructor_<style>.glb;
+  контрольные листы renders/preview/approval_buildings_humans_*_v1.png.
+  Старый временный buildings/building_constructor.glb для Humans больше
+  не используется - его модели переедут к другой расе
 - [ ] Набор устройств для расы Shuffie (папка ассетов — `bionics/`;
   стиль: races/shuffie.md — белый «фарфор», непрерывная кривизна, акцент
   только в углублениях)
 - [ ] Интеграция device_constructor.glb в игру (адресация по индексу или
   extras.device_id)
+- [ ] Интеграция building_constructor_<style>.glb в игру: на BuildingType -
+  комбинация "доминанта + несколько PROP_*" (пропсы отдельными узлами)

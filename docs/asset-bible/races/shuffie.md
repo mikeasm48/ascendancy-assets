@@ -11,10 +11,10 @@
 > с серебром, золотом и стеклом.
 >
 > 🆕 2026-07-11: собран **объединённый набор зданий v2**
-> (`bionics/buildings/building_constructor_v2.glb`, 55 узлов) — творческое
-> слияние этого сета с бионическим city-set'ом, ранее временно служившим
-> Humans, плюс орбитальные док и щит. Флот НЕ менялся — он эталон
-> гармонизации. См. §5b ниже.
+> (`bionics/buildings/building_constructor_v2.glb`, 68 узлов, ~9.7MB) —
+> творческое слияние этого сета с бионическим city-set'ом, ранее временно
+> служившим Humans, плюс полный орбитальный ряд (доки/щиты/оружие).
+> Флот НЕ менялся — он эталон гармонизации. См. §5b ниже.
 
 ## 1. Стилевая формула
 
@@ -113,8 +113,8 @@
 ## 5b. Объединённый набор зданий v2 (2026-07-11)
 
 `tools/build_shuffie_building_set.py` собирает
-`bionics/buildings/building_constructor_v2.glb` (55 узлов) из трёх
-исходников — текущий сет НЕ перезаписывается:
+`bionics/buildings/building_constructor_v2.glb` (68 узлов, бюджет <=10MB)
+из четырёх исходников — текущий сет НЕ перезаписывается:
 
 - **A** — этот сет (`bionics/buildings/building_constructor.glb`, 31 здание):
   металл/стекло, радиальные башни — основа доминант;
@@ -122,8 +122,12 @@
   (`humans/buildings/building_constructor.glb`, 23 меша): инопланетные
   формы и текстуры (белая керамика + бирюза + лайм), мелкие групповые
   модели большой площади;
-- **C** — `refs/buildings/Shuffie/SpaceDock_shuffie_1.glb`,
-  `SpaceShield_shuffie_1.glb`: орбитальные док и щит (форма как есть).
+- **C** — `refs/buildings/Shuffie/*.glb`: орбитальные доки (верфь-ферма
+  SpaceDock_1 и органический кластер SpaceShield_2) и щит-сфера
+  (SpaceShield_1), форма как есть;
+- **D** — корабельные орудия флота (`bionics/ships/shipyard_constructor.glb`:
+  Laser turret, Wave cannon, Gauss cannon) — орбитальное оружие; цвета
+  кораблей не переносятся, орудия красятся в серебро палитры строений.
 
 Гармонизация под флот (ахроматичный белый глянец + графит):
 
@@ -146,13 +150,24 @@ HYDROPONIFIER=08_17, METROPLEX=14_20, POWER_PLANT=10_22) + 5 из B
 (OUTPOST=Mushroom, HABITAT=Skyscraper 5, SKY_NET=Droadcast center,
 ECO_BOOSTER=Ringed building, TERRAFORMING=Skyscraper 4). Пропсы (8): из B —
 Random blocks 1/2, Social housing, Highway, Canopy, Spire, Facility; из A —
-Pylon. Орбитальные: SPACE_DOCK, SPACE_SHIELD (уровни — скейлом в игре;
-лазеры/фазеры Shuffie — TODO). Остальные 31 группа обоих сетов сохранены
-узлами `VARIANT_*` (kind=variant) — богатство вариантов не потеряно.
+Pylon. Орбитальные (15, уровни отличаются размером через трансформ узла,
+меш общий): SPACE_DOCK_SMALL/MEDIUM (органический кластер) и LARGE/HUGE
+(верфь-ферма), SPACE_SHIELD_1..3 (сфера), ORBITAL_LASER_1..3 (Laser turret),
+ORBITAL_PHAZER_1..3 (Wave cannon), ORBITAL_PHAZER_RAPID_1..2 (Gauss cannon).
+Остальные 31 группа обоих сетов сохранены узлами `VARIANT_*`
+(kind=variant) — богатство вариантов не потеряно.
+
+Бюджет размера (<=10MB): цветовые текстуры <=512px, Non-Color <=256px,
+децимация с потолком треугольников и нижним порогом ratio ПО ИСТОЧНИКУ
+(тонкие оболочки A жать нельзя, органика B терпит), UV-слои сняты с
+нетекстурированных мешей, уровни делят один меш. Имена узлов —
+`NNN_<BUILDING_ID>` (без префикса расы).
 
 Extras узлов: `building_id`, `display_name`, `kind`
 (building/prop/orbital/variant), `level`, `style="shuffie"`, `source`.
 Контрольный лист: `renders/preview/approval_buildings_shuffie_v2.png`.
+Орудия у флота — «сглаженные капли», в серебре они читаются как турели
+Shuffie, а не как корабельные детали.
 
 Запуск: `blender -b -P tools/build_shuffie_building_set.py`
 

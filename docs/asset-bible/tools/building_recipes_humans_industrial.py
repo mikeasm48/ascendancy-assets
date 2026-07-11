@@ -1,5 +1,5 @@
 # Рецепты зданий HUMANS, стиль INDUSTRIAL — брутальный индустриальный бетон
-# и сталь по refs/buildings (Factory_1, ColonyBase_1, Laboratory_1, Farm_1):
+# и сталь по refs/buildings/humans (Factory_1, ColonyBase_1, Laboratory_1, Farm_1):
 # ступенчатые серые башни, трубы с ржавыми поясами, фермы, конвейерные мосты,
 # бирюзовые экраны (screen), оранжевые технологические свечения (accent),
 # красные габаритные огни (redline). Земля z=0, здания растут в +Z.

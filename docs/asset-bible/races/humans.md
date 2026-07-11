@@ -9,7 +9,7 @@
 > грибовидные башни, Sketchfab) для Humans был ВРЕМЕННЫМ экспериментом и
 > к стилю Humans отношения не имеет — его модели переехали к расе Shuffie
 > (объединённый набор v2, см. races/shuffie.md §5b). Для зданий Humans источник правды — референсы
-> `refs/buildings/*_humans_*` и сгенерированные наборы (см. `02`/`03`).
+> `refs/buildings/humans/` и сгенерированные наборы (см. `02`/`03`).
 
 ## 1. Стилевая формула
 
@@ -132,7 +132,7 @@ JSON из `startingfleet/` ссылается на части как `shipyard_c
   флота (pioneer, piranha, destroyer, cruiser, battleship, transporter);
   части адресуются как `shipyard_constructor#<index>`.
 
-Референсы зданий: `refs/buildings/*_humans_*` (именование
+Референсы зданий: `refs/buildings/humans/` (именование
 `<Здание><-|_><раса>_<вариант>`; industrial- и scifi-примеры вперемешку,
 стиль определяется по картинке).
 

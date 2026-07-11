@@ -145,10 +145,10 @@ def colony_combo(groups, base_size):
     sauc, sext = merge_group(groups["Saucer_13"])
     normalize(conj, cext, base_size)
     # блюдце заметно уже развилки (лучи должны читаться), утоплено в неё
-    # без зазора и чуть сдвинуто назад
+    # без зазора и чуть сдвинуто вперёд
     normalize(sauc, sext, base_size * 0.68)
     ch = max(v.co.z for v in conj.data.vertices)
-    sauc.data.transform(Matrix.Translation((0, -0.06 * base_size,
+    sauc.data.transform(Matrix.Translation((0, 0.06 * base_size,
                                             ch * 0.55)))
     with bpy.context.temp_override(active_object=conj,
                                    selected_editable_objects=[conj, sauc]):

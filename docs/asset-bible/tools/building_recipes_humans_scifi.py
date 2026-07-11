@@ -1,5 +1,5 @@
 # Рецепты зданий HUMANS, стиль SCIFI — футуристическое техно по
-# refs/buildings (PowerPlant_1/2, Metroplex_1, SkyNet_1, EcoBooster_1,
+# refs/buildings/humans (PowerPlant_1/2, Metroplex_1, SkyNet_1, EcoBooster_1,
 # ResearchCampus_1, ArtificalHidroponifier_1): белый металл и стекло,
 # шпили, кольца, купола, канопе-тарелки, синее свечение (bglow), зелёные
 # биомы (green/gglow). Никаких труб с дымом и ржавчины — стили не смешиваем.

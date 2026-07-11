@@ -7,9 +7,9 @@
 >
 > ⚠️ Прежний `buildings/building_constructor.glb` (белая керамика,
 > грибовидные башни, Sketchfab) для Humans был ВРЕМЕННЫМ экспериментом и
-> к стилю Humans отношения не имеет — его модели переедут к другой расе
-> на следующих этапах. Для зданий Humans источник правды — референсы
-> `refs/buildings/*_humans_*` и сгенерированные наборы (см. `02`/`03`).
+> к стилю Humans отношения не имеет — его модели переехали к расе Shuffie
+> (объединённый набор v2, см. races/shuffie.md §5b). Для зданий Humans источник правды — референсы
+> `refs/buildings/humans/` и сгенерированные наборы (см. `02`/`03`).
 
 ## 1. Стилевая формула
 
@@ -132,7 +132,7 @@ JSON из `startingfleet/` ссылается на части как `shipyard_c
   флота (pioneer, piranha, destroyer, cruiser, battleship, transporter);
   части адресуются как `shipyard_constructor#<index>`.
 
-Референсы зданий: `refs/buildings/*_humans_*` (именование
+Референсы зданий: `refs/buildings/humans/` (именование
 `<Здание><-|_><раса>_<вариант>`; industrial- и scifi-примеры вперемешку,
 стиль определяется по картинке).
 
@@ -141,8 +141,8 @@ JSON из `startingfleet/` ссылается на части как `shipyard_c
 - [`ref/humans_ships_views.png`](ref/humans_ships_views.png) — орто-проекции набора частей и сборок.
 - `ref/humans_buildings_views.png`, `ref/humans_buildings_basecolor.png` —
   ЛЕГАСИ: орто-проекции и палитра старого временного city-set
-  (`building_constructor.glb`); к стилю Humans больше не относятся,
-  пригодятся расе, которой этот сет достанется.
+  (`building_constructor.glb`); к стилю Humans больше не относятся —
+  сет вошёл в объединённый набор зданий Shuffie (races/shuffie.md §5b).
 
 ## 7. Контрольный лист
 

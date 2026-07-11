@@ -58,7 +58,7 @@
 - `blends/`, `*.blend` — артефакты сборки (в .gitignore)
 - сгенерированные GLB уходят в `~/.ascendancy/assets/` (вне репо)
 
-## Состояние и следующие задачи (на 2026-07-10)
+## Состояние и следующие задачи (на 2026-07-11)
 
 - [x] Наборы устройств humans + core: 36 корабельных, сгенерированы и
   согласованы (эталоны: `renders/preview/approval_humans_v14.png` — плюс
@@ -69,6 +69,12 @@
   контрольные листы renders/preview/approval_buildings_humans_*_v1.png.
   Старый временный buildings/building_constructor.glb для Humans больше
   не используется - его модели переедут к другой расе
+- [x] Здания Shuffie: объединённый набор v2 (текущий сет bionics +
+  бионический city-set экс-Humans + орбитальные док/щит из
+  refs/buildings/Shuffie), гармонизирован с флотом ->
+  bionics/buildings/building_constructor_v2.glb (68 узлов, <=10MB,
+  весь орбитальный ряд: 4 дока/3 щита/8 орудий из корабельных турелей;
+  tools/build_shuffie_building_set.py, лист approval_buildings_shuffie_v2.png)
 - [ ] Набор устройств для расы Shuffie (папка ассетов — `bionics/`;
   стиль: races/shuffie.md — белый «фарфор», непрерывная кривизна, акцент
   только в углублениях)

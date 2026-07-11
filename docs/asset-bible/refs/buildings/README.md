@@ -39,3 +39,10 @@
 
 ⚠️ Старый city-set `building_constructor.glb` (белая керамика) референсом
 для Humans НЕ является — его модели переедут к другой расе.
+
+## Подпапка Shuffie/
+
+`SpaceDock_shuffie_1.glb`, `SpaceShield_shuffie_1.glb` — рабочие исходники
+орбитальных конструкций Shuffie (не ужимаются: их читает
+`tools/build_shuffie_building_set.py`; форма используется как есть,
+цвета гармонизируются при сборке).

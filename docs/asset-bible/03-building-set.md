@@ -90,3 +90,17 @@ OrbitalCatalog, у пропсов `PROP_*`), `display_name`, `style`, `kind`
 бетон `#9AA0A6` + сталь + ржавые пояса, у scifi белый металл `#E2E6E9` +
 серебро; стекло — blend с alpha 0.45/0.55, свечения — emission 1.5–4.
 Shade smooth + EdgeSplit 42° на всех узлах.
+
+## Shuffie: объединённый набор v2
+
+Для Shuffie здания НЕ генерируются процедурно — собираются из готовых
+city-set'ов скриптом `tools/build_shuffie_building_set.py`: доминанты из
+текущего сета bionics, мелкие групповые пропсы и «инопланетные» формы из
+бионического city-set'а (ранее временно у Humans), орбитальные док и щит
+из `refs/buildings/Shuffie/*.glb`. Палитра гармонизирована с флотом
+(эталон): золото -> бирюза, графитовые врезки; текстуры бирюза/лайм
+сохранены. Выход: `bionics/buildings/building_constructor_v2.glb`
+(55 узлов, те же extras + kind=variant у запасных групп). Подробный
+маппинг и палитра — `races/shuffie.md` §5b; контрольный лист —
+`renders/preview/approval_buildings_shuffie_v2.png`.
+TODO: орбитальные лазеры/фазеры Shuffie.

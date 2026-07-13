@@ -195,22 +195,28 @@ def star_lane_drive(seed=0):
     P = []
     Z = PLATE_TOP
     zc = Z + 0.45
-    # крендель: два пересекающихся жирных тора
-    P.append(_p(tf(torus(0.34, 0.155, 20, 12), rx=PI / 2.4, rz=0.3,
-                   t=(0.1, 0.05, zc + 0.12)), 'pearl'))
-    P.append(_p(tf(torus(0.3, 0.145, 20, 12), rx=-PI / 2.8, rz=-0.7,
-                   t=(-0.05, -0.05, zc)), 'pearl'))
-    # синие кабельные жгуты, обнимающие крендель
-    rng = np.random.default_rng(seed + 5)
-    for k in range(4):
-        a0 = rng.uniform(0, 2 * PI)
+    # крендель: три пересекающихся жирных тора (перламутровый узел)
+    knots = ((0.32, 0.16, PI / 2.4, 0.3, (0.08, 0.05, zc + 0.14)),
+             (0.28, 0.15, -PI / 2.9, -0.75, (-0.08, -0.05, zc + 0.02)),
+             (0.24, 0.13, PI / 6, 1.6, (0.02, 0.12, zc + 0.22)))
+    for R, r, rxx, rzz, t0 in knots:
+        P.append(_p(tf(torus(R, r, 20, 12), rx=rxx, rz=rzz, t=t0), 'pearl'))
+    # синие кабельные жгуты — обвивают главный тор параллельными витками
+    for k, (roff, zoff) in enumerate(((0.2, 0.0), (0.23, 0.05),
+                                      (0.21, -0.05))):
         path = []
-        for t in np.linspace(0, 1.35 * PI, 20):
-            rr = 0.42 + 0.05 * math.sin(2.5 * t + a0)
-            path.append((0.05 + rr * math.cos(t + a0) * 0.9,
-                         rr * math.sin(t + a0) * 0.6,
-                         zc + 0.05 + 0.3 * math.sin(0.8 * t + a0)))
-        P.append(_p(tube(np.array(path), 0.035, 7), 'blue'))
+        for t in np.linspace(-0.2, 1.55 * PI, 26):
+            path.append((0.08 + (0.32 + roff * math.cos(3 * t)) * math.cos(t + 0.3),
+                         0.05 + (0.32 + roff * math.cos(3 * t)) * math.sin(t + 0.3) * 0.55,
+                         zc + 0.14 + zoff + 0.26 * math.sin(t + 0.3)))
+        P.append(_p(tube(np.array(path), 0.032, 7), 'blue'))
+    # чип-плата на узле
+    P.append(_p(tf(box(0.16, 0.12, 0.05), t=(0.0, 0.05, zc + 0.44), rz=0.4),
+                'graph'))
+    for k in range(4):
+        P.append(_p(tf(box(0.12, 0.015, 0.055), t=(0.0, 0.01 + k * 0.03,
+                                                    zc + 0.44), rz=0.4),
+                    'detail'))
     # синие модули с медными крышками и стеклянными окнами
     for (mx, my, ml, rzz) in ((-0.45, -0.35, 0.5, 0.5), (0.5, 0.3, 0.45, -0.4)):
         P.append(_p(tf(tf(cyl(0.13, ml, 12), ry=PI / 2), t=(mx, my, Z + 0.2),
@@ -330,18 +336,22 @@ def generator_subatomic_scoop(seed=0):
     P.append(_p(tf(cyl(0.14, 0.1, 14), t=(0, 0, Z + 0.3)), 'dark'))
     P.append(_p(tf(cyl(0.11, 0.08, 14), t=(0, 0, Z + 0.39)), 'gold'))
     P.append(_p(tf(cyl(0.13, 0.06, 14), t=(0, 0, Z + 0.46)), 'silver'))
-    # двойная чаша
-    bowl1 = revolve([(0.42, 0.32), (0.4, 0.3), (0.12, 0.02), (0.14, 0.0)], 20)
+    # двойная чаша (открытые, стенка с толщиной)
+    bowl1 = revolve([(0.34, 0.32), (0.1, 0.06), (0.12, 0.0), (0.36, 0.28)],
+                    22, close=False)
     P.append(_p(tf(bowl1, t=(0, 0, Z + 0.5)), 'glass'))
-    bowl2 = revolve([(0.34, 0.26), (0.32, 0.24), (0.1, 0.02), (0.12, 0.0)], 20)
-    P.append(_p(tf(bowl2, t=(0, 0, Z + 0.72)), 'glass'))
-    P.append(_p(tf(torus(0.42, 0.025, 20, 6), t=(0, 0, Z + 0.82)), 'silver'))
-    P.append(_p(tf(torus(0.34, 0.02, 20, 6), t=(0, 0, Z + 0.97)), 'silver'))
-    # вихрь в верхней чаше
-    path = [(0.2 * math.exp(-t / 5) * math.cos(t),
-             0.2 * math.exp(-t / 5) * math.sin(t),
-             Z + 0.95 - 0.012 * t) for t in np.linspace(0, 9, 30)]
-    P.append(_p(tube(np.array(path), 0.012, 6), 'bglow'))
+    P.append(_p(tf(torus(0.35, 0.022, 22, 7), t=(0, 0, Z + 0.81)), 'silver'))
+    bowl2 = revolve([(0.42, 0.3), (0.13, 0.04), (0.15, -0.02), (0.44, 0.26)],
+                    22, close=False)
+    P.append(_p(tf(bowl2, t=(0, 0, Z + 0.76)), 'glass'))
+    P.append(_p(tf(torus(0.43, 0.025, 22, 7), t=(0, 0, Z + 1.05)), 'silver'))
+    # тёмное дно и вихрь в верхней чаше
+    P.append(_p(tf(cyl(0.13, 0.03, 14), t=(0, 0, Z + 0.81)), 'dark'))
+    path = [(0.3 * math.exp(-t / 6) * math.cos(t),
+             0.3 * math.exp(-t / 6) * math.sin(t),
+             Z + 1.0 - 0.018 * t) for t in np.linspace(0, 10, 34)]
+    P.append(_p(tube(np.array(path), 0.014, 6), 'bglow'))
+    P.append(_p(tf(sphere(0.045, 8, 6), t=(0, 0, Z + 0.86)), 'bglow'))
     # боковые капсулы: красные/бирюзовые сердечники в серебре
     for k, a in enumerate(np.linspace(PI / 6, 2 * PI, 3, endpoint=False)):
         x, y = 0.62 * math.cos(a), 0.62 * math.sin(a)
@@ -673,28 +683,38 @@ def shield_ion_wrap(seed=0):
     Z = PLATE_TOP
     # медный тор
     P.append(_p(tf(torus(0.45, 0.12, 24, 10), t=(0, 0, Z + 0.14)), 'copper'))
-    # красная пружина в центре
-    P.append(_p(tf(helix_coil(0.15, 0.32, 6, 0.032), t=(0, 0, Z + 0.32)),
+    # красная пружина-башня в центре
+    P.append(_p(tf(helix_coil(0.16, 0.36, 7, 0.035), t=(0, 0, Z + 0.36)),
                 'coil'))
-    P.append(_p(tf(cyl(0.06, 0.1, 8), t=(0, 0, Z + 0.5)), 'silver'))
-    # два полосатых обруча стоймя
-    for (rzz, dx) in ((0.35, -0.1), (-0.3, 0.12)):
-        P.append(_p(tf(torus(0.3, 0.05, 20, 8), rx=PI / 2, rz=rzz,
-                       t=(dx, 0, Z + 0.55)), 'coil'))
-    # сетчатые зажимные лапы (четыре, сине-зелёные)
-    for k, a in enumerate(np.linspace(PI / 4, 2 * PI, 4, endpoint=False)):
-        x, y = 0.42 * math.cos(a), 0.42 * math.sin(a)
+    P.append(_p(tf(cyl(0.07, 0.12, 8), t=(0, 0, Z + 0.56)), 'silver'))
+    # четыре сетчатых зажима-седла на торе + два красных обруча между ними
+    clamp_a = (PI * 0.2, PI * 0.8, PI * 1.15, PI * 1.75)
+    for k, a in enumerate(clamp_a):
+        x, y = 0.45 * math.cos(a), 0.45 * math.sin(a)
         tag = 'teal' if k % 2 == 0 else 'blue'
-        P.append(_p(tf(loft_z([(Z + 0.02, [(0.16, -0.12), (0.16, 0.12),
-                                           (-0.16, 0.12), (-0.16, -0.12)]),
-                               (Z + 0.42, [(0.07, -0.05), (0.07, 0.05),
-                                           (-0.07, 0.05), (-0.07, -0.05)])]),
+        # седло обнимает тор и спускается к плите
+        P.append(_p(tf(loft_z([(Z + 0.02, [(0.17, -0.14), (0.17, 0.14),
+                                           (-0.17, 0.14), (-0.17, -0.14)]),
+                               (Z + 0.3, [(0.13, -0.11), (0.13, 0.11),
+                                          (-0.13, 0.11), (-0.13, -0.11)]),
+                               (Z + 0.5, [(0.075, -0.06), (0.075, 0.06),
+                                          (-0.075, 0.06), (-0.075, -0.06)])]),
                        t=(x, y, 0), rz=a), tag))
-        P.append(_p(tf(box(0.08, 0.08, 0.1), t=(x * 1.05, y * 1.05, Z + 0.47),
-                       rz=a), 'green'))
-    # тонкие медные провода внутри
-    P.append(_p(arc_pipe((-0.3, -0.15, Z + 0.2), (0.3, 0.1, Z + 0.2),
-                         (0, 0, 0.1), 0.012), 'copper'))
+        P.append(_p(tf(box(0.1, 0.1, 0.06), t=(x, y, Z + 0.53), rz=a),
+                    'green'))
+    # красные обручи: концы входят в оголовки пар зажимов
+    for (a0, a1) in ((clamp_a[0], clamp_a[1]), (clamp_a[2], clamp_a[3])):
+        p0 = (0.45 * math.cos(a0), 0.45 * math.sin(a0), Z + 0.56)
+        p1 = (0.45 * math.cos(a1), 0.45 * math.sin(a1), Z + 0.56)
+        P.append(_p(arc_pipe(p0, p1, (0, 0, 0.42), 0.05, n=20), 'coil'))
+    # тонкие медные провода из тора в центр
+    for a in (0.8, 2.6, 4.4):
+        P.append(_p(arc_pipe((0.4 * math.cos(a), 0.4 * math.sin(a), Z + 0.2),
+                             (0.1 * math.cos(a + 1), 0.1 * math.sin(a + 1),
+                              Z + 0.3), (0, 0, 0.12), 0.012), 'copper'))
+    # чип-коробочка на торе
+    P.append(_p(tf(box(0.1, 0.07, 0.06), t=(-0.44, 0.12, Z + 0.28), rz=0.5),
+                'graph'))
     return merge(P)
 
 
@@ -905,37 +925,45 @@ def weapon_hypersphere_driver(seed=0):
     P = []
     Z = PLATE_TOP
     zc = Z + 0.45
-    # объектив: серебристые кольца-секции
-    for (yy, rr, ll, tag) in ((0.18, 0.34, 0.18, 'silver'),
-                              (0.36, 0.36, 0.14, 'plat'),
-                              (0.52, 0.34, 0.14, 'silver')):
-        P.append(_p(tf(_ycyl(rr, ll, 18), t=(0, yy, zc)), tag))
-    # синее нутро между кольцами
-    P.append(_p(tf(_ycyl(0.29, 0.4, 16), t=(0, 0.32, zc)), 'bglow'))
-    # линза
-    P.append(_p(tf(tf(dome(0.28, 16, 8), rx=-PI / 2), t=(0, 0.6, zc)),
+    # объектив: серебристый барабан с кольцами и синим голо-окном
+    P.append(_p(tf(_ycyl(0.32, 0.55, 18), t=(0, 0.32, zc)), 'silver'))
+    for yy, rr in ((0.1, 0.345), (0.3, 0.36), (0.5, 0.345)):
+        P.append(_p(tf(tf(torus(rr, 0.028, 18, 7), rx=PI / 2), t=(0, yy, zc)),
+                    'plat'))
+    # синее светящееся окно-голограмма на боку барабана
+    P.append(_p(tf(box(0.05, 0.26, 0.2), t=(0.32, 0.3, zc), rz=0.1), 'bglow'))
+    P.append(_p(tf(box(0.05, 0.3, 0.24), t=(0.325, 0.3, zc), rz=0.1),
                 'glass'))
-    P.append(_p(tf(tf(dome(0.2, 14, 7), rx=-PI / 2), t=(0, 0.56, zc)), 'teal'))
-    P.append(_p(tf(tf(torus(0.3, 0.03, 18, 7), rx=PI / 2), t=(0, 0.6, zc)),
+    # линза: стеклянный купол + бирюзовая и оранжевая сердцевина
+    P.append(_p(tf(tf(cyl(0.3, 0.06, 18), rx=-PI / 2), t=(0, 0.62, zc)),
+                'dark'))
+    P.append(_p(tf(tf(dome(0.26, 16, 8), rx=-PI / 2), t=(0, 0.63, zc),
+                   s=(1, 0.6, 1)), 'teal'))
+    P.append(_p(tf(sphere(0.08, 10, 7), t=(0, 0.68, zc)), 'accent'))
+    P.append(_p(tf(tf(dome(0.29, 16, 8), rx=-PI / 2), t=(0, 0.62, zc),
+                   s=(1, 0.75, 1)), 'glass'))
+    P.append(_p(tf(tf(torus(0.31, 0.032, 18, 7), rx=PI / 2), t=(0, 0.62, zc)),
                 'silver'))
-    # гроздь золотых сфер сзади
+    # гроздь золотых сфер сзади: упакована вокруг оси
     rng = np.random.default_rng(seed + 19)
-    for k in range(9):
-        a = k * 2.4
-        rr = 0.12 + 0.1 * (k % 3)
-        x = rr * math.cos(a) * 1.4
-        zoff = rr * math.sin(a)
-        y = -0.25 - 0.12 * (k % 3)
-        r = rng.uniform(0.11, 0.16)
-        P.append(_p(tf(sphere(r, 12, 8), t=(x, y, zc + zoff * 0.8)), 'gold'))
-        P.append(_p(tf(box(0.06, 0.04, 0.03),
-                       t=(x, y + r * 0.7, zc + zoff * 0.8)), 'accent'))
-    # горловина между гроздью и объективом
-    P.append(_p(tf(_ycyl(0.2, 0.16, 14), t=(0, 0.05, zc)), 'dark'))
-    P.append(_p(tf(tf(helix_coil(0.23, 0.12, 3, 0.02), rx=-PI / 2),
-                   t=(0, 0.02, zc)), 'silver'))
-    # опора
-    P.append(_p(tf(box(0.3, 0.5, 0.12), t=(0, 0.15, Z + 0.06)), 'graph'))
+    cluster = [(0, 0, 0, 0.17)]
+    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
+        cluster.append((0.22 * math.cos(a), -0.05, 0.22 * math.sin(a), 0.14))
+    for a in np.linspace(PI / 6, 2 * PI, 5, endpoint=False):
+        cluster.append((0.3 * math.cos(a), -0.24, 0.3 * math.sin(a), 0.12))
+    for (x, y, zoff, r) in cluster:
+        P.append(_p(tf(sphere(r, 12, 8), t=(x, -0.12 + y, zc + zoff)),
+                    'gold'))
+        P.append(_p(tf(box(r * 0.5, 0.03, r * 0.3),
+                       t=(x, -0.12 + y + r * 0.85, zc + zoff)), 'accent'))
+    # горловина с гофрой между гроздью и объективом
+    P.append(_p(tf(_ycyl(0.22, 0.14, 14), t=(0, 0.06, zc)), 'dark'))
+    P.append(_p(tf(tf(helix_coil(0.24, 0.1, 3, 0.022), rx=-PI / 2),
+                   t=(0, 0.04, zc)), 'plat'))
+    # опора-ложемент
+    P.append(_p(tf(box(0.34, 0.5, 0.1), t=(0, 0.3, Z + 0.05)), 'graph'))
+    for yy in (0.12, 0.5):
+        P.append(_p(tf(box(0.44, 0.08, 0.16), t=(0, yy, Z + 0.12)), 'graph'))
     return merge(P)
 
 
@@ -988,55 +1016,145 @@ def weapon_nanomanipulator(seed=0):
 # ================================================================== AUX
 
 def aux_colonizer(seed=0):
-    """Колонизатор-диорама: зелёная стеклянная машина с серебристыми
-    барабанами, геокупол, медные стойки-серверы, золотые шланги и флаг
-    (реф Aux_Colonizer)."""
+    """Колонизатор-диорама (реф Aux_Colonizer): зелёная стеклянная машина
+    с соплом и серебристыми сегментными барабанами, тёмная панель-радиатор
+    в медной раме, геокупол со шлюзом, медные стойки-серверы с белым
+    зажимом COLO-LINEY и золотыми рукавами, зелёное кольцо-«гайка»,
+    кластер мини-приборов, бирюзовые яйца-баки и флаг."""
     P = []
     Z = PLATE_TOP
-    # зелёная машина: стеклянный цилиндр в зелёной раме, ось X
-    P.append(_p(tf(cyl(0.17, 0.5, 14), ry=PI / 2, t=(-0.05, 0.1, Z + 0.42),
-                   rz=-0.3), 'green'))
-    P.append(_p(tf(cyl(0.13, 0.42, 12), ry=PI / 2, t=(-0.05, 0.1, Z + 0.42),
-                   rz=-0.3), 'glass'))
-    P.append(_p(tf(cyl(0.1, 0.2, 10, r2=0.06), ry=PI / 2,
-                   t=(0.25, 0.02, Z + 0.4), rz=-0.3), 'green'))
-    # серебристые сегментные барабаны за машиной
-    for k in range(3):
-        P.append(_p(tf(cyl(0.16 - 0.015 * k, 0.16, 14), ry=PI / 2,
-                       t=(-0.38 - 0.15 * k, 0.18 + 0.04 * k, Z + 0.46),
-                       rz=-0.3), 'silver'))
-    # тёмная панель-радиатор сзади
-    P.append(_p(tf(box(0.55, 0.06, 0.5), t=(-0.3, 0.42, Z + 0.45), rz=-0.25),
+    # --- зелёная машина: ось повёрнута в плане (нос вперёд-вправо)
+    a = -0.55  # разворот оси машины
+    ca, sa = math.cos(a), math.sin(a)
+
+    def on_axis(t_ax, dz=0.0):
+        """Точка на оси машины: t_ax вдоль оси от центра, подъём dz."""
+        return (0.02 + t_ax * ca, 0.18 + t_ax * sa, Z + 0.34 + dz)
+
+    def add_ax(vf, t_ax, tag, dz=0.0):
+        P.append(_p(tf(tf(vf, ry=PI / 2), t=on_axis(t_ax, dz), rz=a), tag))
+
+    # сопло-конус и зелёная горловина
+    add_ax(cyl(0.09, 0.22, 12, r2=0.045), 0.62, 'green')
+    add_ax(cyl(0.13, 0.1, 12, r2=0.09), 0.47, 'green')
+    add_ax(cyl(0.145, 0.05, 12), 0.4, 'silver')
+    # стеклянная секция с внутренним барабаном в зелёной клетке
+    add_ax(cyl(0.155, 0.32, 14), 0.2, 'glass')
+    add_ax(cyl(0.1, 0.28, 10), 0.2, 'detail')
+    for rib in (-0.5, 0.0, 0.5):
+        add_ax(cyl(0.175, 0.06, 14), 0.2 + rib * 0.32, 'green')
+    for roll in np.linspace(0, 2 * PI, 6, endpoint=False):
+        P.append(_p(tf(tf(box(0.36, 0.045, 0.045),
+                          t=(0, 0.168 * math.cos(roll),
+                             0.168 * math.sin(roll))),
+                       t=on_axis(0.2), rz=a), 'green'))
+    # серебристые сегментные барабаны (растут к корме)
+    for k, (t_ax, rr, ww) in enumerate(((-0.08, 0.18, 0.14),
+                                        (-0.24, 0.2, 0.14),
+                                        (-0.41, 0.22, 0.16),
+                                        (-0.58, 0.2, 0.12))):
+        add_ax(cyl(rr, ww, 16), t_ax, 'silver')
+        add_ax(torus(rr, 0.018, 16, 6), t_ax + ww / 2, 'plat')
+    add_ax(dome(0.19, 14, 6), -0.66, 'plat')
+    # ложементы под машиной
+    for t_ax in (-0.35, 0.15):
+        x, y, _ = on_axis(t_ax)
+        P.append(_p(tf(box(0.3, 0.1, 0.16), t=(x, y, Z + 0.08), rz=a),
+                    'plat'))
+    # --- тёмная панель-радиатор в медной раме (за машиной)
+    pa = -0.35
+    px, py = -0.32, 0.52
+    P.append(_p(tf(box(0.72, 0.07, 0.6), t=(px, py, Z + 0.42), rz=pa),
                 'graph'))
-    P.append(_p(tf(box(0.4, 0.03, 0.3), t=(-0.28, 0.38, Z + 0.5), rz=-0.25),
-                'dark'))
-    # геокупол слева-спереди
-    g, fr = _geodome_dev(0.3)
-    P.append(_p(tf(g, t=(-0.42, -0.4, Z + 0.03)), 'glass'))
-    P.append(_p(tf(fr, t=(-0.42, -0.4, Z + 0.03)), 'silver'))
-    P.append(_p(tf(cyl(0.32, 0.04, 16), t=(-0.42, -0.4, Z + 0.02)), 'silver'))
-    # медные стойки-серверы
-    for (bx, by) in ((0.42, 0.22), (0.58, -0.02)):
-        P.append(_p(tf(box(0.14, 0.1, 0.42), t=(bx, by, Z + 0.21)), 'copper'))
-        P.append(_p(tf(box(0.1, 0.02, 0.34), t=(bx, by - 0.06, Z + 0.21)),
+    for (w, l, h, dz) in ((0.76, 0.05, 0.05, 0.72), (0.76, 0.05, 0.05, 0.12)):
+        P.append(_p(tf(box(w, l, h), t=(px, py, Z + dz), rz=pa), 'copper'))
+    for sgn in (-1, 1):
+        P.append(_p(tf(box(0.05, 0.05, 0.62),
+                       t=(px + sgn * 0.37 * math.cos(pa),
+                          py + sgn * 0.37 * math.sin(pa), Z + 0.42), rz=pa),
+                    'copper'))
+    # рёбра радиатора и экран на панели
+    for k in range(7):
+        P.append(_p(tf(box(0.05, 0.09, 0.44),
+                       t=(px - 0.27 + k * 0.06, py + 0.03, Z + 0.38), rz=pa),
                     'dark'))
-    # золотые шланги-дуги
-    P.append(_p(arc_pipe((0.62, 0.3, Z + 0.1), (0.3, -0.35, Z + 0.05),
-                         (0.25, 0, 0.3), 0.06), 'gold'))
-    P.append(_p(arc_pipe((0.5, 0.35, Z + 0.3), (0.62, -0.15, Z + 0.1),
-                         (0.2, 0, 0.2), 0.05), 'gold'))
-    # бирюзовые яйца-баки
-    for k, (ex, ey) in enumerate(((0.0, -0.62), (0.18, -0.55), (0.34, -0.62))):
-        P.append(_p(tf(sphere(0.09, 10, 7), t=(ex, ey, Z + 0.09),
-                       s=(1, 1, 1.2)), 'teal'))
-    # мини-башенки
-    for (tx, ty, hh, tag) in ((-0.05, -0.35, 0.22, 'blue'),
-                              (0.08, -0.28, 0.28, 'teal'),
-                              (-0.18, -0.3, 0.18, 'plat')):
-        P.append(_p(tf(box(0.06, 0.06, hh), t=(tx, ty, Z + hh / 2)), tag))
-    # флагшток с золотым флагом
-    P.append(_p(tf(cyl(0.015, 0.9, 6), t=(-0.72, 0.55, Z + 0.45)), 'silver'))
-    P.append(_p(tf(box(0.22, 0.02, 0.14), t=(-0.6, 0.55, Z + 0.8)), 'gold'))
+    P.append(_p(tf(box(0.2, 0.03, 0.14),
+                   t=(px + 0.22 - 0.24 * sa, py - 0.1, Z + 0.6), rz=pa),
+                'bglow'))
+    # цветные провода по верхней кромке
+    for k, tag in enumerate(('teal', 'yellow', 'blue')):
+        P.append(_p(arc_pipe((px - 0.2 + k * 0.08, py, Z + 0.74),
+                             (px + 0.05 + k * 0.08, py - 0.05, Z + 0.7),
+                             (0, -0.04, 0.05), 0.012), tag))
+    # --- геокупол со шлюзом (спереди-слева)
+    dx, dy = -0.42, -0.38
+    P.append(_p(tf(cyl(0.36, 0.06, 18), t=(dx, dy, Z + 0.03)), 'silver'))
+    g, fr = _geodome_dev(0.33)
+    P.append(_p(tf(g, t=(dx, dy, Z + 0.06)), 'glass'))
+    P.append(_p(tf(fr, t=(dx, dy, Z + 0.06)), 'silver'))
+    # шлюз-павильон с синим экраном
+    P.append(_p(tf(box(0.14, 0.12, 0.18), t=(dx + 0.3, dy - 0.14, Z + 0.09),
+                   rz=-0.5), 'white'))
+    P.append(_p(tf(box(0.07, 0.02, 0.1), t=(dx + 0.36, dy - 0.19, Z + 0.1),
+                   rz=-0.5), 'bglow'))
+    # --- медные стойки-серверы (справа) и бак сверху
+    for (bx, by, hh) in ((0.5, 0.28, 0.52), (0.66, 0.02, 0.44)):
+        P.append(_p(tf(box(0.16, 0.13, hh), t=(bx, by, Z + hh / 2)), 'copper'))
+        for j in range(4):  # полки
+            P.append(_p(tf(box(0.12, 0.02, 0.05),
+                           t=(bx, by - 0.07, Z + 0.08 + j * hh / 4.5)),
+                        'dark'))
+            P.append(_p(tf(box(0.1, 0.01, 0.03),
+                           t=(bx, by - 0.075, Z + 0.08 + j * hh / 4.5)),
+                        'white'))
+    P.append(_p(tf(cyl(0.11, 0.18, 12), t=(0.5, 0.28, Z + 0.61)), 'wood'))
+    P.append(_p(tf(cyl(0.12, 0.04, 12), t=(0.5, 0.28, Z + 0.72)), 'graph'))
+    # --- белый зажим COLO-LINEY с двумя золотыми рукавами (петли справа)
+    P.append(_p(tf(box(0.32, 0.2, 0.16), t=(0.46, -0.36, Z + 0.1), rz=-0.15),
+                'white'))
+    P.append(_p(tf(box(0.34, 0.06, 0.06), t=(0.46, -0.36, Z + 0.2), rz=-0.15),
+                'silver'))
+    # рукава — две вертикальные арки у правого края плиты
+    for (hx, cy, R, z0) in ((0.78, -0.03, 0.3, 0.3), (0.62, 0.0, 0.22, 0.24)):
+        ts = np.linspace(0, PI, 14)
+        path = np.array([(hx + 0.06 * math.sin(t), cy - R * math.cos(t),
+                          Z + z0 + R * 1.05 * math.sin(t)) for t in ts])
+        P.append(_p(tube(path, 0.042, 9), 'gold'))
+        for pt in (path[0], path[-1]):
+            P.append(_p(tf(cyl(0.052, 0.07, 9),
+                           t=(pt[0], pt[1], pt[2] - 0.03)), 'silver'))
+    # --- зелёное кольцо-«гайка» (два яруса, гранёное)
+    P.append(_p(tf(torus(0.14, 0.05, 8, 6), t=(-0.08, -0.42, Z + 0.07),
+                   rx=0.35), 'green'))
+    P.append(_p(tf(torus(0.12, 0.045, 8, 6), t=(-0.02, -0.36, Z + 0.16),
+                   rx=0.55, rz=0.4), 'green'))
+    # --- кластер мини-приборов
+    rng = np.random.default_rng(seed + 29)
+    for k, (mx, my, tag) in enumerate(((0.1, -0.52, 'coil'),
+                                       (0.18, -0.44, 'yellow'),
+                                       (0.26, -0.55, 'blue'),
+                                       (0.33, -0.44, 'teal'),
+                                       (0.18, -0.6, 'white'))):
+        hh = rng.uniform(0.1, 0.22)
+        P.append(_p(tf(box(0.06, 0.05, hh), t=(mx, my, Z + hh / 2)), tag))
+        P.append(_p(tf(box(0.04, 0.03, 0.02), t=(mx, my, Z + hh + 0.01)),
+                    'dark'))
+        if k % 2 == 0:
+            P.append(_p(tf(cyl(0.005, 0.08, 5), t=(mx, my, Z + hh + 0.05)),
+                        'silver'))
+    # --- бирюзовые яйца-баки на подставках
+    for (ex, ey) in ((0.52, -0.55), (0.65, -0.42), (0.75, -0.58)):
+        P.append(_p(tf(cyl(0.06, 0.03, 10), t=(ex, ey, Z + 0.015)), 'plat'))
+        P.append(_p(tf(sphere(0.085, 10, 8), t=(ex, ey, Z + 0.12),
+                       s=(1, 1, 1.25)), 'teal'))
+    # --- флагшток с латунным рваным флагом
+    fx, fy = -0.68, 0.6
+    P.append(_p(tf(cyl(0.016, 1.05, 8), t=(fx, fy, Z + 0.52)), 'silver'))
+    P.append(_p(tf(sphere(0.03, 8, 6), t=(fx, fy, Z + 1.06)), 'silver'))
+    P.append(_p(tf(box(0.24, 0.02, 0.15), t=(fx + 0.13, fy, Z + 0.93)),
+                'coil2'))
+    P.append(_p(tf(box(0.08, 0.02, 0.09), t=(fx + 0.28, fy, Z + 0.96),
+                   rz=0.15), 'coil2'))
     return merge(P)
 
 

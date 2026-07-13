@@ -1,23 +1,25 @@
-# build_building_sets.py — сборка наборов зданий Humans (Blender 4.2+/5.x)
+# build_building_sets.py — сборка наборов зданий Humans + Core
+# (Blender 4.2+/5.x)
 #
 # Геометрия строится чистым Python/numpy (building_meshes.py +
-# building_recipes_humans_{industrial,scifi}.py, силуэты согласованы по
-# refs/buildings), Blender используется только для материалов, шейдинга
-# и экспорта GLB — как в build_device_sets.py.
+# building_recipes_humans_{industrial,scifi}.py / building_recipes_core.py,
+# силуэты согласованы по refs/buildings), Blender используется только для
+# материалов, шейдинга и экспорта GLB — как в build_device_sets.py.
 #
 # Запуск:
 #   blender -b -P tools/build_building_sets.py -- \
-#       --styles industrial[,scifi] \
+#       --styles industrial[,scifi][,core] \
 #       --assets-dir ~/.ascendancy/assets/races \
 #       [--out blends/buildings_gen.blend] [--no-export]
 #
-# Выход per style (старый building_constructor.glb НЕ трогаем):
+# Выход per style (старый building_constructor.glb Humans НЕ трогаем):
 #   industrial -> <assets-dir>/humans/buildings/building_constructor_industrial.glb
 #   scifi      -> <assets-dir>/humans/buildings/building_constructor_scifi.glb
+#   core       -> <assets-dir>/core/buildings/building_constructor.glb
 #
 # Каждый объект несёт glTF-extras: building_id, display_name, style,
 # kind (building / orbital / prop), level. Порядок узлов фиксирован
-# building_catalog.RECIPES.
+# каталогом набора (building_catalog.RECIPES / building_catalog_core.RECIPES).
 
 import os
 import sys
@@ -31,11 +33,18 @@ if HERE not in sys.path:
 
 import building_recipes_humans_industrial
 import building_recipes_humans_scifi
+import building_recipes_core
 from building_catalog import RECIPES, build
+from building_catalog_core import RECIPES as RECIPES_CORE
 
-STYLE_MODULES = {
-    "industrial": building_recipes_humans_industrial,
-    "scifi": building_recipes_humans_scifi,
+# style -> (модуль рецептов, каталог, раса, имя GLB)
+SETS = {
+    "industrial": (building_recipes_humans_industrial, RECIPES, "humans",
+                   "building_constructor_industrial.glb"),
+    "scifi": (building_recipes_humans_scifi, RECIPES, "humans",
+              "building_constructor_scifi.glb"),
+    "core": (building_recipes_core, RECIPES_CORE, "core",
+             "building_constructor.glb"),
 }
 
 # ----------------------------------------------------------------------------
@@ -60,6 +69,21 @@ MATS = {
     "bglow":   ("#4FC3FF", 0.00, 0.40, 4.0),
     "gglow":   ("#7CE87C", 0.00, 0.40, 2.5),
     "pglow":   ("#A97BFF", 0.00, 0.40, 3.0),
+    # --- дополнения набора core (синхронизировано с preview_buildings)
+    "plate":   ("#D5DADF", 0.20, 0.60, 0),
+    "grass":   ("#5F9E44", 0.00, 0.90, 0),
+    "soil":    ("#6B4A2F", 0.00, 0.90, 0),
+    "red":     ("#C0392B", 0.20, 0.50, 0),
+    "sand":    ("#C9B48A", 0.10, 0.80, 0),
+    "copper":  ("#B87333", 0.80, 0.35, 0),
+    "solar":   ("#2B3D66", 0.40, 0.30, 0),
+    "pink":    ("#C79AA6", 0.10, 0.70, 0),
+    "gold":    ("#C89B3C", 0.70, 0.35, 0),
+    "teal":    ("#3E9A92", 0.30, 0.50, 0),
+    "blue":    ("#4A6FA5", 0.30, 0.50, 0),
+    "ygreen":  ("#A8B23A", 0.20, 0.60, 0),
+    "dgreen":  ("#39543F", 0.20, 0.60, 0),
+    "graph":   ("#3A3F45", 0.50, 0.35, 0),
 }
 GLASS_ALPHA = {"glass": 0.45, "glass_g": 0.55}
 
@@ -151,18 +175,19 @@ def add_edge_split(obj, angle_deg=42.0):
     return mod
 
 
-def build_style(style, mats):
-    module = STYLE_MODULES[style]
-    coll = bpy.data.collections.new(f"COL_buildings_humans_{style}")
+def build_style(style, mats, off_y=0.0):
+    """off_y разносит сетки нескольких стилей в одном .blend; при сборке
+    одного стиля раскладка начинается от начала координат."""
+    module, recipes, race, _ = SETS[style]
+    coll = bpy.data.collections.new(f"COL_buildings_{race}_{style}")
     bpy.context.scene.collection.children.link(coll)
     objs = []
-    for i, (bld_id, disp, recipe, lvl, kind) in enumerate(RECIPES):
+    for i, (bld_id, disp, recipe, lvl, kind) in enumerate(recipes):
         V, F, tags = build(module, recipe, lvl, seed=i)
         mesh = mesh_from_parts(f"BLD_{style}_{bld_id}", V, F, tags, mats)
         obj = bpy.data.objects.new(f"{i:03d}_{style}_{bld_id}", mesh)
         coll.objects.link(obj)
         row, col_i = divmod(i, 6)
-        off_y = 0.0 if style == "industrial" else 60.0
         obj.location = (col_i * 6.0, off_y + row * 6.0, 0.0)
         add_edge_split(obj)
         obj["building_id"] = bld_id
@@ -175,9 +200,10 @@ def build_style(style, mats):
 
 
 def export_glb(style, objs, assets_dir):
-    out_dir = os.path.join(assets_dir, "humans", "buildings")
+    _, _, race, fname = SETS[style]
+    out_dir = os.path.join(assets_dir, race, "buildings")
     os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, f"building_constructor_{style}.glb")
+    path = os.path.join(out_dir, fname)
     for o in bpy.data.objects:
         o.select_set(False)
     for o in objs:
@@ -203,10 +229,10 @@ def main():
     mats = make_materials()
     made = {}
     for style in a["styles"]:
-        if style not in STYLE_MODULES:
+        if style not in SETS:
             print(f"[building-sets] неизвестный стиль: {style} — пропуск")
             continue
-        made[style] = build_style(style, mats)
+        made[style] = build_style(style, mats, off_y=60.0 * len(made))
         print(f"[building-sets] {style}: {len(made[style])} объектов")
     out = os.path.abspath(a["out"])
     os.makedirs(os.path.dirname(out), exist_ok=True)

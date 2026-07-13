@@ -9,7 +9,8 @@
 - `docs/asset-bible/02-device-set.md` — архитектура генератора устройств,
   команды запуска, маппинг каталога
 - `docs/asset-bible/03-building-set.md` — генератор зданий (BuildingType) и
-  орбитальных конструкций (OrbitalCatalog): 2 стиля industrial/scifi + пропсы
+  орбитальных конструкций (OrbitalCatalog): Humans в 2 стилях
+  industrial/scifi + наземный набор core «по умолчанию» + пропсы
 - `docs/asset-bible/races/humans.md`, `races/shuffie.md` — стилевые киты рас
   (палитры/геометрия сверены с фактическими GLB игры)
 - `docs/asset-bible/refs/devices/README.md` — политика референсов
@@ -75,6 +76,14 @@
   bionics/buildings/building_constructor_v2.glb (68 узлов, <=10MB,
   весь орбитальный ряд: 4 дока/3 щита/8 орудий из корабельных турелей;
   tools/build_shuffie_building_set.py, лист approval_buildings_shuffie_v2.png)
+- [x] Здания Core (набор «по умолчанию» для рас без своих китов, по
+  refs/buildings/core): 14 BuildingType + 4 спецпозиции (Engineering
+  Retreat, Surface Shield/Megashield, Alien Ruins) + 15 орбитальных
+  (OrbitalCatalog, как у Humans) + 6 пропсов; наземные — «диорама на
+  плите», орбитальные без плит -> core/buildings/building_constructor.glb
+  (39 узлов, ~3.7MB; tools/building_recipes_core.py +
+  building_catalog_core.py, сборка/превью общими скриптами со стилем core;
+  лист approval_buildings_core_v1.png)
 - [x] Набор устройств Shuffie: 36 устройств из частей конструктора
   кораблей (tools/build_bionics_device_set.py -> bionics/devices/
   device_constructor.glb; оружие = те же турели, что в орбитальном ряду

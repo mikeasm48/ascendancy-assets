@@ -18,7 +18,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from building_catalog import RECIPES, build  # noqa: E402
+from building_catalog import build  # noqa: E402
 
 # tag -> (hex, emissive)  — цвета согласованы с MATS в build_building_sets.py
 PALETTE = {
@@ -28,6 +28,12 @@ PALETTE = {
     "screen": ("#35C8DC", 1), "accent": ("#E06A2B", 1), "redline": ("#C43B2A", 1),
     "white":  ("#E2E6E9", 0), "silver": ("#B9C2CA", 0), "bglow":  ("#4FC3FF", 1),
     "gglow":  ("#7CE87C", 1), "pglow":  ("#A97BFF", 1),
+    # --- дополнения набора core
+    "plate":  ("#D5DADF", 0), "grass":  ("#5F9E44", 0), "soil":   ("#6B4A2F", 0),
+    "red":    ("#C0392B", 0), "sand":   ("#C9B48A", 0), "copper": ("#B87333", 0),
+    "solar":  ("#2B3D66", 0), "pink":   ("#C79AA6", 0), "gold":   ("#C89B3C", 0),
+    "teal":   ("#3E9A92", 0), "blue":   ("#4A6FA5", 0), "ygreen": ("#A8B23A", 0),
+    "dgreen": ("#39543F", 0), "graph":  ("#3A3F45", 0),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)
@@ -69,14 +75,22 @@ def draw(ax, V, F, tags):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--style", default="industrial",
-                    choices=("industrial", "scifi"))
+                    choices=("industrial", "scifi", "core"))
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
     if args.style == "industrial":
         import building_recipes_humans_industrial as mod
-    else:
+        from building_catalog import RECIPES
+        race = "HUMANS"
+    elif args.style == "scifi":
         import building_recipes_humans_scifi as mod
+        from building_catalog import RECIPES
+        race = "HUMANS"
+    else:
+        import building_recipes_core as mod
+        from building_catalog_core import RECIPES
+        race = "CORE"
 
     n = len(RECIPES)
     cols = 6
@@ -88,11 +102,12 @@ def main():
         V, F, tags = build(mod, recipe, lvl, seed=i)
         draw(ax, V, F, tags)
         ax.set_title(f"{bid}", color="#c8cdd2", fontsize=7, pad=0)
-    fig.suptitle(f"HUMANS buildings — {args.style}", color="#e8ecef",
+    fig.suptitle(f"{race} buildings — {args.style}", color="#e8ecef",
                  fontsize=13, y=0.995)
-    out = args.out or os.path.join(
-        HERE, "..", "renders", "preview",
-        f"approval_buildings_humans_{args.style}_v1.png")
+    default_name = (f"approval_buildings_core_v1.png" if args.style == "core"
+                    else f"approval_buildings_humans_{args.style}_v1.png")
+    out = args.out or os.path.join(HERE, "..", "renders", "preview",
+                                   default_name)
     fig.tight_layout()
     fig.savefig(out, dpi=105, facecolor=fig.get_facecolor())
     print("saved:", os.path.abspath(out))

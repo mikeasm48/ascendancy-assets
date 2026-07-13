@@ -1,4 +1,4 @@
-# 03 — Набор зданий: планетарные строения и орбитальные конструкции (Humans)
+# 03 — Набор зданий: планетарные строения и орбитальные конструкции (Humans, Core)
 
 Источники списков (ascendancy-remake):
 
@@ -90,6 +90,52 @@ OrbitalCatalog, у пропсов `PROP_*`), `display_name`, `style`, `kind`
 бетон `#9AA0A6` + сталь + ржавые пояса, у scifi белый металл `#E2E6E9` +
 серебро; стекло — blend с alpha 0.45/0.55, свечения — emission 1.5–4.
 Shade smooth + EdgeSplit 42° на всех узлах.
+
+## Core: наземный набор «по умолчанию»
+
+Core — не раса, а набор для рас без собственных китов зданий. Референсы —
+`refs/buildings/core/` (формат имени `<строение>_core[_<вариант>]`).
+
+Стиль наземных: диорама на плите-основании (белый борт + газон или
+техпокрытие), белый и серебристый металл, стеклянные купола и теплицы,
+цветные трубы (`gold`/`teal`), серебристые чаны, красно-белые полосатые
+дымовые трубы, солнечные панели (`solar`), свечения `accent`/`bglow`/
+`gglow`. Орбитальные — без плит, центр ~z=1, орудия смотрят в +Y.
+
+Состав (`tools/building_catalog_core.py`, порядок = индекс узла в GLB):
+
+- 14 планетарных `BuildingType`; display_name — имена оригинальной
+  Ascendancy 1995, где они отличаются (Agriplot, Industrial Megafacility,
+  Hyperpower Plant, Lush Growth Bomb). SKY_NET и TERRAFORMING рефов не
+  имеют — спроектированы в стиле набора.
+- 4 наземных спецпозиции по рефам, пока вне `BuildingType`:
+  ENGINEERING_RETREAT, SURFACE_SHIELD, SURFACE_MEGA_SHIELD, ALIEN_RUINS.
+- 15 орбитальных конструкций `OrbitalCatalog` (те же id, что у Humans):
+  доки — серые многоярусные эстакады с солнечным настилом и жёлтыми
+  цистернами (рефы OrbitalDocks/OrbitalShipyard), щиты — зелёные платформы
+  с парой геокуполов-клеток и синими ядрами (OrbitalShield_1..3), лазер —
+  модульная платформа с фиолетовой линзой (OrbitalLaser, левый вариант),
+  фазер — с плазменными трубами и роторным дулом (правый вариант),
+  скорострельный — кассеты красных ракет с золотыми БЧ
+  (OrbitalMissileBase).
+- 6 пропсов-расширителей (те же id, что у Humans).
+
+Файлы: `tools/building_recipes_core.py` (рецепты),
+`tools/building_catalog_core.py` (каталог); сборка и превью — общими
+`build_building_sets.py` / `preview_buildings.py` со стилем `core`:
+
+```bash
+blender -b -P tools/build_building_sets.py -- \
+    --styles core --assets-dir ~/.ascendancy/assets/races
+python tools/preview_buildings.py --style core
+```
+
+Выход: `~/.ascendancy/assets/races/core/buildings/building_constructor.glb`
+(39 узлов, ~3.7MB; те же extras, kind=`building`/`orbital`/`prop`).
+Контрольный лист — `renders/preview/approval_buildings_core_v1.png`.
+Палитра — блок «дополнения набора core» в MATS `build_building_sets.py`.
+Раскладка сетки в .blend начинается от начала координат (смещение +60 по Y
+добавляется только следующим стилям при сборке нескольких за раз).
 
 ## Shuffie: объединённый набор v2
 

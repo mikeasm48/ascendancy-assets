@@ -12,11 +12,15 @@
 #
 # Выход per race:
 #   humans -> <assets-dir>/humans/devices/device_constructor.glb
+#             (device_catalog.RECIPES: 36 устройств с tech_level)
 #   core   -> <assets-dir>/core/devices/device_constructor.glb
-#             (платформа у core — отдельный child-меш <id>_platform,
-#              в игре её можно скрыть)
+#             (device_catalog_core.RECIPES: 25 моделей по рефам
+#              refs/devices/core БЕЗ уровней/поколений; имя узла =
+#              <Тип>_<Название>; платформа — отдельный child-меш
+#              <node>_platform, в игре её можно скрыть)
 #
-# Каждый объект несёт glTF-extras: device_id, display_name, tech_level.
+# Extras: humans — device_id, display_name, tech_level;
+#         core   — device_id (= имя узла), display_name, device_type.
 
 import os
 import sys
@@ -31,6 +35,8 @@ if HERE not in sys.path:
 import device_recipes_humans
 import device_recipes_core
 from device_catalog import RECIPES, build
+from device_catalog_core import RECIPES as RECIPES_CORE
+from device_catalog_core import build as build_core
 
 RACE_MODULES = {"humans": device_recipes_humans, "core": device_recipes_core}
 RACE_FOLDERS = {"humans": "humans", "core": "core"}
@@ -66,6 +72,12 @@ MATS = {
     "bglow":   ("#4FC3FF", 0.0, 0.40, 4.0),
     "gun":     ("#8E969E", 0.85, 0.35, 0),
     "gun_d":   ("#4C545C", 0.7, 0.40, 0),
+    # --- дополнения core v3 (по обновлённым рефам refs/devices/core)
+    "copper":  ("#B87333", 0.9, 0.30, 0),
+    "pearl":   ("#E8DFEA", 0.4, 0.15, 0),
+    "yellow":  ("#D9C04B", 0.3, 0.50, 0),
+    "pglow":   ("#E570C0", 0.0, 0.40, 3.0),
+    "yglow":   ("#C6E24A", 0.0, 0.40, 3.0),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)
@@ -168,11 +180,10 @@ def build_race(race, mats):
     coll = bpy.data.collections.new(f"COL_devices_{race}")
     bpy.context.scene.collection.children.link(coll)
     objs = []
+    if race == "core":
+        return build_race_core(module, coll, mats)
     for i, (dev_id, disp, recipe, lvl) in enumerate(RECIPES):
-        kw = {}
-        if race == "core":
-            kw["with_platform"] = False  # платформа отдельным мешем ниже
-        V, F, tags = build(module, recipe, lvl, seed=i, **kw)
+        V, F, tags = build(module, recipe, lvl, seed=i)
         smooth = recipe not in FLAT_RECIPES
         mesh = mesh_from_parts(f"DEV_{race}_{dev_id}", V, F, tags, mats, smooth)
         obj = bpy.data.objects.new(f"{i:03d}_{race}_{dev_id}", mesh)
@@ -185,18 +196,34 @@ def build_race(race, mats):
         obj["display_name"] = disp
         obj["tech_level"] = lvl
         objs.append(obj)
-        # платформа core — отдельный child-меш
-        if race == "core":
-            pV, pF, ptags = module.merge(module.platform(1.6, True))
-            pmesh = mesh_from_parts(f"PLT_{race}_{dev_id}", pV, pF, ptags,
-                                    mats, smooth=False)
-            pobj = bpy.data.objects.new(f"{i:03d}_{race}_{dev_id}_platform",
-                                        pmesh)
-            coll.objects.link(pobj)
-            pobj.parent = obj
-            pobj["device_id"] = dev_id
-            pobj["part"] = "platform"
-            objs.append(pobj)
+    return objs
+
+
+def build_race_core(module, coll, mats):
+    """Core v3: свой каталог (без уровней), имя узла = <Тип>_<Название>,
+    плита-постамент по каталогу — отдельный child-меш <node>_platform."""
+    objs = []
+    for i, (node, disp, dtype, recipe, plate) in enumerate(RECIPES_CORE):
+        V, F, tags = build_core(module, recipe, seed=i)
+        mesh = mesh_from_parts(f"DEV_core_{node}", V, F, tags, mats)
+        obj = bpy.data.objects.new(node, mesh)
+        coll.objects.link(obj)
+        row, col_i = divmod(i, 5)
+        obj.location = (col_i * 3.0, row * 3.0, 0.0)
+        add_edge_split(obj)
+        obj["device_id"] = node
+        obj["display_name"] = disp
+        obj["device_type"] = dtype
+        objs.append(obj)
+        pV, pF, ptags = module.merge(module.platform(plate))
+        pmesh = mesh_from_parts(f"PLT_core_{node}", pV, pF, ptags, mats,
+                                smooth=False)
+        pobj = bpy.data.objects.new(f"{node}_platform", pmesh)
+        coll.objects.link(pobj)
+        pobj.parent = obj
+        pobj["device_id"] = node
+        pobj["part"] = "platform"
+        objs.append(pobj)
     return objs
 
 

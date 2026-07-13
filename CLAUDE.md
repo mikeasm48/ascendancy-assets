@@ -19,10 +19,13 @@
 
 - Геометрия строится **чистым Python/numpy** в `docs/asset-bible/tools/`:
   `device_meshes.py` (примитивы: revolve, tube, torus, helix_coil, loft),
-  `device_recipes_humans.py`, `device_recipes_core.py` (рецепты 36 устройств),
-  `device_catalog.py` (порядок = индекс узла в GLB — НЕ МЕНЯТЬ существующий
-  порядок, только добавлять в конец), `build_device_sets.py` (bpy-глю:
-  материалы, шейдинг, экспорт).
+  `device_recipes_humans.py` + `device_catalog.py` (36 устройств humans с
+  поколениями), `device_recipes_core.py` + `device_catalog_core.py`
+  (25 устройств core v3 по рефам, БЕЗ поколений и привязки к
+  спецификациям — маппинг вручную отдельно; узлы `<Тип>_<Название>`),
+  `build_device_sets.py` (bpy-глю: материалы, шейдинг, экспорт).
+  Порядок записей каталогов = индекс узла в GLB — НЕ МЕНЯТЬ существующий
+  порядок, только добавлять в конец.
 - Blender используется ТОЛЬКО для материалов/шейдинга/экспорта. Geometry
   Nodes сознательно не используем: первая GN-версия сломалась о разницу
   раскладки сокетов между Blender 4.2 и 5.1 (`build_device_library.py`
@@ -43,16 +46,19 @@
   генераторы/щиты — цвет поколения (blue→teal→gold→accent→coil по уровням),
   сканеры humans — графит + красные канты, оружие — светящиеся дула.
 - Shade smooth + EdgeSplit 42° на всём, КРОМЕ щитов (гекс-сфера гранёная).
-- Core-набор: платформа-постамент — отдельный child-меш `<id>_platform`.
+- Core-набор: плита-постамент (5 видов: silver/dark/fins/circuit/lattice)
+  — отдельный child-меш `<node>_platform`.
 - Быстрое превью без Blender: рецепты чистый numpy, рендерится matplotlib
   (см. историю в `renders/preview/approval_*.png` — эталоны вида).
 
 ## Референсы
 
 - `docs/asset-bible/refs/devices/`, `refs/buildings/` — ужатые копии
-  (≤1024px, GLB заменены `*_preview.png`). Полноразмерные оригиналы:
-  `~/java/ascendancy-refs-originals/{devices,buildings}/` (вне git).
-  Скриншоты `*_core*.png` — оригиналы Ascendancy 1995, не трогать.
+  (≤1024px jpeg q85, GLB заменены `*_preview.png`). Полноразмерные
+  оригиналы: `~/java/ascendancy-refs-originals/{devices,buildings}/`
+  (вне git). Раскладка refs/devices — по расам: `devices/core/`
+  (формат имени `<Тип>_core_<Название>_<версия>`), `devices/humans/`
+  (по категориям устройств).
 
 ## Не коммитить
 
@@ -61,9 +67,16 @@
 
 ## Состояние и следующие задачи (на 2026-07-11)
 
-- [x] Наборы устройств humans + core: 36 корабельных, сгенерированы и
-  согласованы (эталоны: `renders/preview/approval_humans_v14.png` — плюс
-  более поздние правки оружия/aux в рецептах, `approval_core_v4.png`)
+- [x] Набор устройств humans: 36 корабельных, сгенерированы и согласованы
+  (эталон: `renders/preview/approval_humans_v14.png` — плюс более поздние
+  правки оружия/aux в рецептах)
+- [x] Набор устройств core v3: 25 моделей строго по обновлённым рефам
+  refs/devices/core (стилизация под иконки Ascendancy 1995, «прибор на
+  плите-постаменте»), БЕЗ поколений и привязки к спецификациям (маппинг
+  вручную отдельным PR) -> core/devices/device_constructor.glb (50 узлов:
+  25 устройств `<Тип>_<Название>` + 25 плит `<node>_platform`, ~4.2MB;
+  лист approval_devices_core_v3.png). Прежний core-набор v2 (36 устройств
+  по device_catalog) признан неудачным и заменён
 - [x] Здания + орбитальные конструкции Humans: 14 планетарных (BuildingType)
   + 15 орбитальных (OrbitalCatalog) + 6 пропсов, каждый в 2 стилях
   (industrial/scifi, не смешивать!) -> building_constructor_<style>.glb;

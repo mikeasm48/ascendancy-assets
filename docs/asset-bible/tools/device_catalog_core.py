@@ -66,7 +66,7 @@ RECIPES = [
     ("Weapon_HypersphereDriver", "Hypersphere Driver", "weapon",
      'weapon_hypersphere_driver', 'dark'),
     ("Weapon_Nanomanipulator", "Nanomanipulator", "weapon",
-     'weapon_nanomanipulator', 'silver'),
+     'weapon_nanomanipulator', None),
     # -------- aux
     ("Aux_Colonizer", "Colonizer", "aux",
      'aux_colonizer', 'silver'),

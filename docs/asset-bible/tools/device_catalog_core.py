@@ -73,7 +73,7 @@ RECIPES = [
     ("Aux_InvasionModule", "Invasion Module", "aux",
      'aux_invasion_module', None),
     ("Aux_LaneMagnetron", "Lane Magnetron", "aux",
-     'aux_lane_magnetron', 'dark'),
+     'aux_lane_magnetron', None),
     ("Aux_Colonizer_New", "Colonizer (New)", "aux",
      'aux_colonizer_new', None),
 ]

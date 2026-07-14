@@ -1334,51 +1334,20 @@ def aux_colonizer_new(seed=0):
 
 
 
+_LANE_MAGNETRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "lane_magnetron_mesh.npz")
+
+
 def aux_lane_magnetron(seed=0):
-    """Кластер серебристых баков и «самоцветных» цилиндров, связанных
-    трубками с жёлто-зелёной светящейся жидкостью (реф Aux_LaneMagnetron)."""
-    P = []
-    Z = PLATE_TOP
-    # три самоцветных цилиндра (синий/бирюзовый/зелёный) по диагонали
-    gems = (((-0.15, 0.35), 'blue', 0.5), ((0.2, 0.15), 'teal', 0.42),
-            ((0.5, -0.05), 'green', 0.36))
-    for (gx, gy), tag, zz in gems:
-        P.append(_p(tf(cyl(0.15, 0.2, 14), t=(gx, gy, Z + zz)), tag))
-        P.append(_p(tf(torus(0.15, 0.025, 14, 6), t=(gx, gy, Z + zz + 0.1)),
-                    'gold'))
-        P.append(_p(tf(torus(0.15, 0.02, 14, 6), t=(gx, gy, Z + zz - 0.08)),
-                    'gold'))
-        P.append(_p(tf(dome(0.11, 12, 5), t=(gx, gy, Z + zz + 0.11)), 'glass'))
-        P.append(_p(tf(cyl(0.1, 0.18, 12), t=(gx, gy, Z + zz - 0.2)), 'gold'))
-    # серебристые пузатые баки
-    for (bx, by, r) in ((0.42, -0.42, 0.17), (0.12, -0.5, 0.15)):
-        P.append(_p(tf(sphere(r, 14, 9), t=(bx, by, Z + r + 0.16),
-                       s=(1, 1, 1.25)), 'silver'))
-        P.append(_p(tf(cyl(r * 0.75, 0.14, 12), t=(bx, by, Z + 0.08)),
-                    'detail'))
-    # лежачий бак слева и латунный насос-конус
-    P.append(_p(tf(cyl(0.13, 0.4, 12), ry=PI / 2, t=(-0.45, -0.3, Z + 0.14),
-                   rz=0.3), 'silver'))
-    P.append(_p(tf(sphere(0.13, 10, 7), t=(-0.65, -0.24, Z + 0.14)), 'plat'))
-    P.append(_p(tf(cyl(0.1, 0.22, 10, r2=0.04), ry=PI / 2,
-                   t=(-0.15, -0.42, Z + 0.12), rz=-0.2), 'coil2'))
-    # светящиеся жёлто-зелёные трубки между узлами
-    links = (((-0.15, 0.35, 0.75), (0.2, 0.15, 0.66), 0.25),
-             ((0.2, 0.15, 0.66), (0.5, -0.05, 0.6), 0.2),
-             ((0.5, -0.05, 0.5), (0.42, -0.42, 0.45), 0.18),
-             ((-0.45, -0.3, 0.2), (-0.15, 0.35, 0.55), 0.3))
-    for (a, b, lift) in links:
-        P.append(_p(arc_pipe((a[0], a[1], Z + a[2] - 0.15),
-                             (b[0], b[1], Z + b[2] - 0.15),
-                             (0, 0, lift), 0.035), 'yglow'))
-    # вертикальная светящаяся колонна с серебристым верхом
-    P.append(_p(tf(cyl(0.05, 0.5, 8), t=(0.68, 0.3, Z + 0.35)), 'yglow'))
-    P.append(_p(tf(cyl(0.06, 0.08, 8), t=(0.68, 0.3, Z + 0.62)), 'silver'))
-    P.append(_p(tf(cyl(0.06, 0.06, 8), t=(0.68, 0.3, Z + 0.08)), 'silver'))
-    # лежачая стеклянная трубка с жидкостью
-    P.append(_p(tf(cyl(0.075, 0.4, 10), ry=PI / 2, t=(-0.3, 0.55, Z + 0.1),
-                   rz=0.25), 'glass'))
-    P.append(_p(tf(cyl(0.05, 0.36, 8), ry=PI / 2, t=(-0.3, 0.55, Z + 0.1),
-                   rz=0.25), 'yglow'))
-    _gauge(P, (-0.02, -0.15, Z + 0.52), rz=0.4)
-    return merge(P)
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Aux_core_LaneMagnetron_2.glb (5684
+    верш./10321 треуг., ~188KB, без цвета). Цвет перенесён с
+    Aux_core_LaneMagnetron_2_texture.glb (та же модель, ~1.8x масштаб,
+    4096-текстура; топология близкая, но не точно 1:1, поэтому перенос —
+    как у InvasionModule: ~10k образцов с текстуры (linear->sRGB), для
+    каждой грани референса-2 голосование по 40 ближайшим точкам среди
+    узкого набора реальных цветов (lmgray/lmtan/lmbrass/lmteal/lmglow/
+    lmgreen/dark, найденных k-means). Собственная плита уже есть в
+    меше — общая плита каталога отключена (device_catalog_core.RECIPES,
+    plate=None)."""
+    return _load_imported_mesh(_LANE_MAGNETRON_MESH_PATH)

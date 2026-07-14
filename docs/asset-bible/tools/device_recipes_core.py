@@ -210,48 +210,26 @@ def star_lane_drive(seed=0):
     return _load_imported_mesh(_STAR_LANE_DRIVE_MESH_PATH)
 
 
+_STAR_LANE_HYPERDRIVE_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "star_lane_hyperdrive_mesh.npz")
+
+
 def star_lane_hyperdrive(seed=0):
-    """Спираль из толстых гофрошлангов, тёмно-красные модули сверху и
-    манометры (реф StarLaneDrive_HyperDrive)."""
-    P = []
-    Z = PLATE_TOP
-    # спиральная укладка шлангов: нисходящая спираль большого радиуса
-    path = []
-    for t in np.linspace(0, 4.4 * PI, 64):
-        rr = 0.46 - 0.02 * (t / (4.4 * PI))
-        path.append((rr * math.cos(t), rr * math.sin(t),
-                     Z + 0.6 - 0.1 * t / PI))
-    P.append(_p(tube(np.array(path), 0.115, 10), 'silver'))
-    # гофра: кольца по шлангу
-    for t in np.linspace(0.3, 4.1 * PI, 26):
-        rr = 0.46 - 0.02 * (t / (4.4 * PI))
-        P.append(_p(tf(torus(0.115, 0.018, 10, 6),
-                       t=(rr * math.cos(t), rr * math.sin(t),
-                          Z + 0.6 - 0.1 * t / PI),
-                       ry=PI / 2, rz=t + PI / 2), 'plat'))
-    # тёмно-красные цилиндры-модули сверху
-    for (mx, my, rzz) in ((-0.2, 0.25, 0.5), (0.3, -0.05, -0.6)):
-        P.append(_p(tf(tf(cyl(0.14, 0.6, 12), ry=PI / 2), t=(mx, my, Z + 0.78),
-                       rz=rzz), 'coil'))
-        for dxx in (-0.2, 0.0, 0.2):
-            P.append(_p(tf(torus(0.145, 0.02, 12, 6), ry=PI / 2,
-                           t=(mx + dxx * math.cos(rzz),
-                              my + dxx * math.sin(rzz), Z + 0.78), rz=rzz),
-                        'silver'))
-        P.append(_p(tf(sphere(0.14, 10, 7),
-                       t=(mx + 0.32 * math.cos(rzz), my + 0.32 * math.sin(rzz),
-                          Z + 0.78), s=(0.7, 1, 1)), 'plat'))
-    # красные трубки обвязки и манометры
-    P.append(_p(arc_pipe((-0.5, -0.3, Z + 0.15), (-0.35, 0.3, Z + 0.7),
-                         (-0.2, 0, 0.2), 0.045), 'coil'))
-    P.append(_p(arc_pipe((0.5, 0.25, Z + 0.2), (0.35, -0.1, Z + 0.72),
-                         (0.2, 0.1, 0.15), 0.045), 'coil'))
-    _gauge(P, (0.52, 0.35, Z + 0.5), rz=-0.6)
-    _gauge(P, (-0.15, 0.02, Z + 0.95), rz=0.3)
-    # центральная серебристая капсула
-    P.append(_p(tf(cyl(0.09, 0.35, 10), t=(0.02, 0.05, Z + 0.55)), 'silver'))
-    P.append(_p(tf(dome(0.09, 10, 5), t=(0.02, 0.05, Z + 0.72)), 'silver'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию (спираль гофрошлангов) —
+    геометрия из низкополигонального референса
+    StarLaneDrive_core_HyperDrive_2.glb (7153 верш./14674 треуг., ~257KB,
+    без цвета). Цвет с StarLaneDrive_core_HyperDrive_2_texture.glb (та же
+    модель, топология близкая, но не 1:1 — 15193 граней; медианное
+    расхождение центров ~0.0014, перенос голосованием по 5 ближайшим).
+    Теги — k-means-группы: hdsilver (гофрошланги/корпус), hdred
+    (малиновые модули), hdrose (потёртые панели), dark (кабели). Меш был
+    единой связной компонентой, поэтому родная плита отрезана по
+    плоскости (все вершины грани ниже верха плиты), вместо неё чистый
+    двухступенчатый бокс, верх заподлицо с линией среза. Модель
+    отнормирована до макс. габарита 1.0 (в исходнике была ~1.9).
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_STAR_LANE_HYPERDRIVE_MESH_PATH)
 
 
 # ============================================================ GENERATORS

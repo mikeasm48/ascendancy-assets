@@ -104,6 +104,11 @@ MATS = {
     "sldpeach":  ("#F7DCCF", 0.2, 0.55, 0),
     "sldblue":   ("#94B3C9", 0.4, 0.40, 0),
     "sldnavy":   ("#084C7E", 0.4, 0.35, 0),
+    # --- StarLaneDrive_HyperDrive (перенос цвета с эталонного референса,
+    # см. device_recipes_core.star_lane_hyperdrive)
+    "hdsilver":  ("#BFBCBD", 0.8, 0.35, 0),
+    "hdred":     ("#A3485E", 0.3, 0.50, 0),
+    "hdrose":    ("#A88486", 0.3, 0.55, 0),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)

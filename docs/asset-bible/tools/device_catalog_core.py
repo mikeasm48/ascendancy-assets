@@ -26,7 +26,7 @@ RECIPES = [
     ("StarLaneDrive", "Star Lane Drive", "star_lane_drive",
      'star_lane_drive', None),
     ("StarLaneDrive_HyperDrive", "Star Lane Hyperdrive", "star_lane_drive",
-     'star_lane_hyperdrive', 'silver'),
+     'star_lane_hyperdrive', None),
     # -------- generators
     ("Generator_ProtonShaver", "Proton Shaver", "generator",
      'generator_proton_shaver', 'silver'),

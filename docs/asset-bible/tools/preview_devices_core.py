@@ -39,6 +39,8 @@ PALETTE = {
     "coltan": ("#DCC9A4", 0), "colgold": ("#CCB27A", 0),
     "lmgray": ("#BCBEBB", 0), "lmtan": ("#D5C5A0", 0), "lmbrass": ("#998C66", 0),
     "lmteal": ("#3689A4", 0), "lmglow": ("#F2F470", 1), "lmgreen": ("#7CA379", 0),
+    "sldwhite": ("#ECE7E6", 0), "sldgray": ("#BCBDBB", 0), "sldpeach": ("#F7DCCF", 0),
+    "sldblue": ("#94B3C9", 0), "sldnavy": ("#084C7E", 0),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)

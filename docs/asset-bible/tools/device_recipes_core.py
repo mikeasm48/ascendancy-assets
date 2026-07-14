@@ -189,51 +189,25 @@ def engine_ion_banger(seed=0):
 
 # ====================================================== STAR LANE DRIVES
 
+_STAR_LANE_DRIVE_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "star_lane_drive_mesh.npz")
+
+
 def star_lane_drive(seed=0):
-    """Перламутровый «крендель» в синей кабельной обвязке, синие модули
-    с медными крышками (реф StarLaneDrive)."""
-    P = []
-    Z = PLATE_TOP
-    zc = Z + 0.45
-    # крендель: три пересекающихся жирных тора (перламутровый узел)
-    knots = ((0.32, 0.16, PI / 2.4, 0.3, (0.08, 0.05, zc + 0.14)),
-             (0.28, 0.15, -PI / 2.9, -0.75, (-0.08, -0.05, zc + 0.02)),
-             (0.24, 0.13, PI / 6, 1.6, (0.02, 0.12, zc + 0.22)))
-    for R, r, rxx, rzz, t0 in knots:
-        P.append(_p(tf(torus(R, r, 20, 12), rx=rxx, rz=rzz, t=t0), 'pearl'))
-    # синие кабельные жгуты — обвивают главный тор параллельными витками
-    for k, (roff, zoff) in enumerate(((0.2, 0.0), (0.23, 0.05),
-                                      (0.21, -0.05))):
-        path = []
-        for t in np.linspace(-0.2, 1.55 * PI, 26):
-            path.append((0.08 + (0.32 + roff * math.cos(3 * t)) * math.cos(t + 0.3),
-                         0.05 + (0.32 + roff * math.cos(3 * t)) * math.sin(t + 0.3) * 0.55,
-                         zc + 0.14 + zoff + 0.26 * math.sin(t + 0.3)))
-        P.append(_p(tube(np.array(path), 0.032, 7), 'blue'))
-    # чип-плата на узле
-    P.append(_p(tf(box(0.16, 0.12, 0.05), t=(0.0, 0.05, zc + 0.44), rz=0.4),
-                'graph'))
-    for k in range(4):
-        P.append(_p(tf(box(0.12, 0.015, 0.055), t=(0.0, 0.01 + k * 0.03,
-                                                    zc + 0.44), rz=0.4),
-                    'detail'))
-    # синие модули с медными крышками и стеклянными окнами
-    for (mx, my, ml, rzz) in ((-0.45, -0.35, 0.5, 0.5), (0.5, 0.3, 0.45, -0.4)):
-        P.append(_p(tf(tf(cyl(0.13, ml, 12), ry=PI / 2), t=(mx, my, Z + 0.2),
-                       rz=rzz), 'blue'))
-        for sgn in (-1, 1):
-            cap = (mx + sgn * ml / 2 * math.cos(rzz),
-                   my + sgn * ml / 2 * math.sin(rzz), Z + 0.2)
-            P.append(_p(tf(tf(cyl(0.145, 0.06, 12), ry=PI / 2), t=cap,
-                           rz=rzz), 'copper'))
-        P.append(_p(tf(box(ml * 0.5, 0.06, 0.12), t=(mx, my + 0.1, Z + 0.24),
-                       rz=rzz), 'glass'))
-    # серебристый блок с рёбрами
-    P.append(_p(tf(box(0.3, 0.24, 0.2), t=(0.45, -0.4, Z + 0.1)), 'silver'))
-    for k in range(4):
-        P.append(_p(tf(box(0.26, 0.02, 0.16),
-                       t=(0.45, -0.47 + k * 0.045, Z + 0.12)), 'detail'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию («крендель» из торов) —
+    геометрия из низкополигонального референса StarLaneDrive_core_2.glb
+    (8396 верш./15812 треуг., ~284KB, без цвета). Цвет перенесён с
+    StarLaneDrive_core_2_texture.glb — та же геометрия с UV+текстурой
+    (масштаб ~2.008, грани совпадают 1:1: медианное расхождение центров
+    ~3e-7), поэтому каждая грань раскрашена напрямую по своему UV-сэмплу
+    (linear->sRGB). Теги — k-means-группы реальных цветов модели:
+    sldwhite/sldgray/sldpeach/sldblue/sldnavy + dark. Родная плита
+    референса вырезана по связным компонентам и заменена чистым
+    двухступенчатым боксом (белый верх, серая ступень снизу) — как у
+    InvasionModule, во избежание z-fighting. Собственная плита уже в
+    меше — общая плита каталога отключена (device_catalog_core.RECIPES,
+    plate=None)."""
+    return _load_imported_mesh(_STAR_LANE_DRIVE_MESH_PATH)
 
 
 def star_lane_hyperdrive(seed=0):

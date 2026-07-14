@@ -785,59 +785,25 @@ def shield_conclusion(seed=0):
 
 # =============================================================== WEAPONS
 
+_UEBERLASER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "ueberlaser_mesh.npz")
+
+
 def weapon_ueberlaser(seed=0):
-    """Гатлинг-лазер: серебристая сфера в жёлтой вилке на круглом
-    постаменте, ствол-кассета в клетке из прутьев, дуло в +Y
-    (реф Weapon_Ueberlaser)."""
-    P = []
-    Z = PLATE_TOP
-    # круглый постамент с зубцами
-    P.append(_p(tf(cyl(0.48, 0.1, 20), t=(0, -0.1, Z + 0.05)), 'wood'))
-    P.append(_p(tf(cyl(0.42, 0.06, 20), t=(0, -0.1, Z + 0.13)), 'plat'))
-    for a in np.linspace(0, 2 * PI, 10, endpoint=False):
-        P.append(_p(tf(box(0.1, 0.06, 0.08),
-                       t=(0.46 * math.cos(a), -0.1 + 0.46 * math.sin(a),
-                          Z + 0.1), rz=a), 'wood'))
-    # жёлтая вилка-качалка
-    for sgn in (-1, 1):
-        P.append(_p(tf(loft_z([(Z + 0.14, [(0.2, -0.07), (0.2, 0.07),
-                                           (-0.2, 0.07), (-0.2, -0.07)]),
-                               (Z + 0.75, [(0.08, -0.05), (0.08, 0.05),
-                                           (-0.08, 0.05), (-0.08, -0.05)])]),
-                       t=(sgn * 0.33, -0.25, 0)), 'yellow'))
-    P.append(_p(tf(box(0.75, 0.1, 0.09), t=(0, -0.25, Z + 0.78)), 'yellow'))
-    P.append(_p(tf(tf(cyl(0.05, 0.5, 8), ry=PI / 2), t=(0, -0.25, Z + 0.68)),
-                'glass'))
-    # тело: сфера + барабан вдоль +Y
-    P.append(_p(tf(sphere(0.28, 16, 10), t=(0, -0.3, Z + 0.45)), 'silver'))
-    P.append(_p(tf(_ycyl(0.24, 0.4, 16), t=(0, 0.0, Z + 0.45)), 'silver'))
-    P.append(_p(tf(_ycyl(0.26, 0.06, 16), t=(0, 0.14, Z + 0.45)), 'detail'))
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        P.append(_p(tf(box(0.05, 0.2, 0.02),
-                       t=(0.24 * math.cos(a), 0.02, Z + 0.45 + 0.24 * math.sin(a)),
-                       ry=-a), 'detail'))
-    # кассета стволов: зелёно-жёлтые сегменты в клетке из прутьев
-    segs = [('green', 0.3), ('yellow', 0.5), ('green', 0.72)]
-    for tag, yy in segs:
-        P.append(_p(tf(_ycyl(0.16, 0.2, 14), t=(0, yy, Z + 0.45)), tag))
-    for f, tag in ((0.4, 'white'), (0.62, 'silver')):
-        P.append(_p(tf(tf(torus(0.185, 0.022, 14, 6), rx=PI / 2),
-                       t=(0, f, Z + 0.45)), tag))
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        P.append(_p(tf(tf(cyl(0.018, 0.62, 6), rx=-PI / 2),
-                       t=(0.185 * math.cos(a), 0.5,
-                          Z + 0.45 + 0.185 * math.sin(a))), 'silver'))
-    # дульный блок
-    P.append(_p(tf(_ycyl(0.15, 0.1, 12), t=(0, 0.88, Z + 0.45)), 'green'))
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        P.append(_p(tf(tf(cyl(0.02, 0.05, 6), rx=-PI / 2),
-                       t=(0.1 * math.cos(a), 0.94,
-                          Z + 0.45 + 0.1 * math.sin(a))), 'dark'))
-    P.append(_p(tf(_ycyl(0.07, 0.08, 10), t=(0, 0.97, Z + 0.45)), 'bglow'))
-    # жёлтый амбушюр-блок на теле
-    P.append(_p(tf(box(0.2, 0.25, 0.18), t=(-0.2, -0.42, Z + 0.35), rz=0.3),
-                'coil2'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_Ueberlaser_2_model.glb
+    (7241 верш./14686 треуг., ~258KB; концепт —
+    Weapon_core_Ueberlaser_2.jpg: серебристый гатлинг-лазер в жёлтой
+    А-раме на круглом постаменте, зелёно-жёлтые кольца кассеты стволов,
+    голубые линзы-дула). Цвет с парной текстурированной модели (позиции
+    1:1, топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB) в 4 тега: ubsilver (корпус, AO-оттенки слиты), ubyellow
+    (рама/пояс), ubgreen (кольца стволов), эмиссивный ubglow (циановые
+    линзы). Родная плита чистая (14 пар близких параллельных граней) —
+    оставлена. Модель отнормирована до макс. габарита 1.0, дуло в +Y.
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_UEBERLASER_MESH_PATH)
 
 
 _PLASMATRON_MESH_PATH = os.path.join(

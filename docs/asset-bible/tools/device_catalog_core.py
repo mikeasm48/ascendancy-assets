@@ -60,7 +60,7 @@ RECIPES = [
      'shield_conclusion', 'silver'),
     # -------- weapons
     ("Weapon_Ueberlaser", "Ueberlaser", "weapon",
-     'weapon_ueberlaser', 'silver'),
+     'weapon_ueberlaser', None),
     ("Weapon_Plasmatron", "Plasmatron", "weapon",
      'weapon_plasmatron', None),
     ("Weapon_HypersphereDriver", "Hypersphere Driver", "weapon",

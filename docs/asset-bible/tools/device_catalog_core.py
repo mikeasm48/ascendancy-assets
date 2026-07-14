@@ -62,7 +62,7 @@ RECIPES = [
     ("Weapon_Ueberlaser", "Ueberlaser", "weapon",
      'weapon_ueberlaser', 'silver'),
     ("Weapon_Plasmatron", "Plasmatron", "weapon",
-     'weapon_plasmatron', 'silver'),
+     'weapon_plasmatron', None),
     ("Weapon_HypersphereDriver", "Hypersphere Driver", "weapon",
      'weapon_hypersphere_driver', None),
     ("Weapon_Nanomanipulator", "Nanomanipulator", "weapon",

@@ -117,6 +117,11 @@ MATS = {
     # device_recipes_core.weapon_hypersphere_driver; корпус — общий nmgun)
     "hsbrass":   ("#B69C7F", 0.9, 0.30, 0),
     "hsglow":    ("#3C83A4", 0.0, 0.40, 2.5),
+    # --- Plasmatron (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_plasmatron)
+    "plwhite":   ("#B9B3B3", 0.3, 0.40, 0),
+    "plbronze":  ("#85696B", 0.8, 0.35, 0),
+    "plglow":    ("#D54C3D", 0.0, 0.40, 3.0),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)

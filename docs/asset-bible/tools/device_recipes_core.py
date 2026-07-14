@@ -840,35 +840,25 @@ def weapon_ueberlaser(seed=0):
     return merge(P)
 
 
+_PLASMATRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "plasmatron_mesh.npz")
+
+
 def weapon_plasmatron(seed=0):
-    """Бронзовый барабан сзади, белая рама-скоба и красная светящаяся
-    гофроспираль-ствол с раскалённым дулом в +Y (реф Weapon_Plasmatron)."""
-    P = []
-    Z = PLATE_TOP
-    zc = Z + 0.42
-    # задний бронзовый диск-барабан
-    P.append(_p(tf(_ycyl(0.36, 0.22, 18), t=(0, -0.42, zc)), 'copper'))
-    P.append(_p(tf(_ycyl(0.28, 0.06, 16), t=(0, -0.55, zc)), 'dark'))
-    P.append(_p(tf(tf(torus(0.36, 0.03, 18, 7), rx=PI / 2), t=(0, -0.3, zc)),
-                'detail'))
-    # белое тело и рама-скоба
-    P.append(_p(tf(_ycyl(0.2, 0.35, 14), t=(0, -0.1, zc)), 'white'))
-    for sgn in (-1, 1):
-        path = np.array([(sgn * 0.3, -0.5, Z + 0.05),
-                         (sgn * 0.42, -0.35, zc + 0.28),
-                         (sgn * 0.18, 0.05, zc + 0.4),
-                         (sgn * 0.08, 0.1, zc + 0.28)])
-        P.append(_p(tube(path, 0.045, 8), 'white'))
-    P.append(_p(tf(box(0.1, 0.3, 0.3), t=(0.28, -0.15, Z + 0.15), ry=0.3),
-                'white'))
-    # красная гофроспираль вокруг ствола
-    P.append(_p(tf(tf(helix_coil(0.13, 0.55, 9, 0.045), rx=-PI / 2),
-                   t=(0, 0.25, zc)), 'redline'))
-    P.append(_p(tf(_ycyl(0.07, 0.6, 10), t=(0, 0.25, zc)), 'silver'))
-    # дуло
-    P.append(_p(tf(_ycyl(0.09, 0.08, 10), t=(0, 0.58, zc)), 'detail'))
-    P.append(_p(tf(_ycone(0.06, 0.14, 10), t=(0, 0.68, zc)), 'accent'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_Plasmatron_2_model.glb
+    (7410 верш./14956 треуг., ~263KB; концепт —
+    Weapon_core_Plasmatron_2.jpg: белая турель с бронзовыми барабанами и
+    раскалённым красным гофростволом на круглом бело-бронзовом
+    постаменте). Цвет с парной текстурированной модели (позиции 1:1,
+    топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB) в 3 тега: plwhite (корпус/постамент), plbronze (барабаны,
+    AO-оттенки слиты в один), plglow (эмиссивная красная спираль ствола).
+    Родная плита относительно чистая (16 пар близких параллельных граней)
+    — оставлена. Модель отнормирована до макс. габарита 1.0, ствол в +Y.
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_PLASMATRON_MESH_PATH)
 
 
 _HYPERSPHERE_DRIVER_MESH_PATH = os.path.join(

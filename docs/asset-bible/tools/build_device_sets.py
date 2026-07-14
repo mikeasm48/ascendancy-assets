@@ -113,6 +113,10 @@ MATS = {
     # device_recipes_core.weapon_nanomanipulator)
     "nmgun":     ("#6E6B70", 0.85, 0.40, 0),
     "nmglow":    ("#E29ABD", 0.0, 0.40, 2.5),
+    # --- HypersphereDriver (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_hypersphere_driver; корпус — общий nmgun)
+    "hsbrass":   ("#B69C7F", 0.9, 0.30, 0),
+    "hsglow":    ("#3C83A4", 0.0, 0.40, 2.5),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)

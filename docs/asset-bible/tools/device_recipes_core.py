@@ -871,52 +871,25 @@ def weapon_plasmatron(seed=0):
     return merge(P)
 
 
+_HYPERSPHERE_DRIVER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "hypersphere_driver_mesh.npz")
+
+
 def weapon_hypersphere_driver(seed=0):
-    """Ствол-объектив с синим нутром и линзой в +Y, сзади гроздь золотых
-    сфер-накопителей (реф Weapon_HypersphereDriver)."""
-    P = []
-    Z = PLATE_TOP
-    zc = Z + 0.45
-    # объектив: серебристый барабан с кольцами и синим голо-окном
-    P.append(_p(tf(_ycyl(0.32, 0.55, 18), t=(0, 0.32, zc)), 'silver'))
-    for yy, rr in ((0.1, 0.345), (0.3, 0.36), (0.5, 0.345)):
-        P.append(_p(tf(tf(torus(rr, 0.028, 18, 7), rx=PI / 2), t=(0, yy, zc)),
-                    'plat'))
-    # синее светящееся окно-голограмма на боку барабана
-    P.append(_p(tf(box(0.05, 0.26, 0.2), t=(0.32, 0.3, zc), rz=0.1), 'bglow'))
-    P.append(_p(tf(box(0.05, 0.3, 0.24), t=(0.325, 0.3, zc), rz=0.1),
-                'glass'))
-    # линза: стеклянный купол + бирюзовая и оранжевая сердцевина
-    P.append(_p(tf(tf(cyl(0.3, 0.06, 18), rx=-PI / 2), t=(0, 0.62, zc)),
-                'dark'))
-    P.append(_p(tf(tf(dome(0.26, 16, 8), rx=-PI / 2), t=(0, 0.63, zc),
-                   s=(1, 0.6, 1)), 'teal'))
-    P.append(_p(tf(sphere(0.08, 10, 7), t=(0, 0.68, zc)), 'accent'))
-    P.append(_p(tf(tf(dome(0.29, 16, 8), rx=-PI / 2), t=(0, 0.62, zc),
-                   s=(1, 0.75, 1)), 'glass'))
-    P.append(_p(tf(tf(torus(0.31, 0.032, 18, 7), rx=PI / 2), t=(0, 0.62, zc)),
-                'silver'))
-    # гроздь золотых сфер сзади: упакована вокруг оси
-    rng = np.random.default_rng(seed + 19)
-    cluster = [(0, 0, 0, 0.17)]
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        cluster.append((0.22 * math.cos(a), -0.05, 0.22 * math.sin(a), 0.14))
-    for a in np.linspace(PI / 6, 2 * PI, 5, endpoint=False):
-        cluster.append((0.3 * math.cos(a), -0.24, 0.3 * math.sin(a), 0.12))
-    for (x, y, zoff, r) in cluster:
-        P.append(_p(tf(sphere(r, 12, 8), t=(x, -0.12 + y, zc + zoff)),
-                    'gold'))
-        P.append(_p(tf(box(r * 0.5, 0.03, r * 0.3),
-                       t=(x, -0.12 + y + r * 0.85, zc + zoff)), 'accent'))
-    # горловина с гофрой между гроздью и объективом
-    P.append(_p(tf(_ycyl(0.22, 0.14, 14), t=(0, 0.06, zc)), 'dark'))
-    P.append(_p(tf(tf(helix_coil(0.24, 0.1, 3, 0.022), rx=-PI / 2),
-                   t=(0, 0.04, zc)), 'plat'))
-    # опора-ложемент
-    P.append(_p(tf(box(0.34, 0.5, 0.1), t=(0, 0.3, Z + 0.05)), 'graph'))
-    for yy in (0.12, 0.5):
-        P.append(_p(tf(box(0.44, 0.08, 0.16), t=(0, yy, Z + 0.12)), 'graph'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_HypersphereDriver_2_model.glb
+    (7491 верш./15218 треуг., ~267KB, без цвета; концепт —
+    Weapon_core_HypersphereDriver_2.jpg: тёмная турель-пушка на круглом
+    постаменте, сзади гроздь латунных сфер-накопителей, ствол-объектив с
+    синим свечением). Цвет с парной текстурированной модели (позиции 1:1,
+    топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB). Серые AO-оттенки корпуса слиты в общий тег nmgun (тот
+    же тёмный ганметал, что у Nanomanipulator), сферы — hsbrass, синее
+    свечение линзы — эмиссивный hsglow. Родная плита-постамент чистая —
+    оставлена. Модель отнормирована до макс. габарита 1.0, дуло в +Y по
+    конвенции оружия. Собственная плита уже в меше — общая плита каталога
+    отключена (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_HYPERSPHERE_DRIVER_MESH_PATH)
 
 
 _NANOMANIPULATOR_MESH_PATH = os.path.join(

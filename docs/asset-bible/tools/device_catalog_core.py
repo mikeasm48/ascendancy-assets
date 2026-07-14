@@ -64,7 +64,7 @@ RECIPES = [
     ("Weapon_Plasmatron", "Plasmatron", "weapon",
      'weapon_plasmatron', 'silver'),
     ("Weapon_HypersphereDriver", "Hypersphere Driver", "weapon",
-     'weapon_hypersphere_driver', 'dark'),
+     'weapon_hypersphere_driver', None),
     ("Weapon_Nanomanipulator", "Nanomanipulator", "weapon",
      'weapon_nanomanipulator', None),
     # -------- aux

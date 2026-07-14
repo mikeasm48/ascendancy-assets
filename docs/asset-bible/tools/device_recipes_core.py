@@ -1016,146 +1016,241 @@ def weapon_nanomanipulator(seed=0):
 # ================================================================== AUX
 
 def aux_colonizer(seed=0):
-    """Колонизатор-диорама (реф Aux_Colonizer). Два параллельных агрегата
-    вдоль грани плиты (ось X): зелёная машина с клеткой и соплом + отдельный
-    серебристый сегментный барабан за ней; сзади панель-радиатор в медной
-    раме; справа стойки-серверы, бак и белый зажим COLO-LINEY с арками
-    золотых рукавов; слева геокупол со шлюзом; спереди упорядоченный ряд
-    мини-приборов, кольцо-«гайка» и три яйца-бака; флаг."""
+    """Колонизатор-диорама (реф Aux_Colonizer), скомпонована по грани плиты:
+    panel-a вдоль грани d; drum-a и engine-a — параллельные агрегаты вдоль
+    оси X, торцами упёртые в panel-a, drum-a боком у грани c, engine-a
+    боком у drum-a; dome-a у грани a; tank-a у второго торца drum-a;
+    rack-a/шкаф/rack-b — группа вдоль оси a между tank-a и торцом engine-a;
+    clamp-a стоит на ребре вдоль грани b рядом с tank-a, из него выходят
+    hose-a/hose-b, огибающие rack-группу; egg-a/b/c в углу a-b вдоль грани
+    b, mini-a..f вторым рядом за ними, ring-a (лежит плашмя) — следом за
+    mini-рядом; флаг в углу c-d."""
     P = []
     Z = PLATE_TOP
+    half = 0.85
 
     def xcyl(vf, x, y, z, tag):
         P.append(_p(tf(tf(vf, ry=PI / 2), t=(x, y, z)), tag))
 
-    # --- зелёная машина: ось X, нос (конус) в +X
-    gy, gz = -0.12, Z + 0.26
-    xcyl(cyl(0.09, 0.2, 12, r2=0.045), 0.4, gy, gz, 'green')
-    xcyl(cyl(0.125, 0.09, 12, r2=0.085), 0.26, gy, gz, 'green')
-    xcyl(cyl(0.14, 0.05, 12), 0.19, gy, gz, 'silver')
-    # стеклянная секция в зелёной клетке
-    xcyl(cyl(0.15, 0.34, 14), -0.02, gy, gz, 'glass')
-    xcyl(cyl(0.095, 0.3, 10), -0.02, gy, gz, 'detail')
-    for xx in (-0.18, -0.02, 0.14):
-        xcyl(cyl(0.17, 0.055, 14), xx, gy, gz, 'green')
-    for roll in np.linspace(0, 2 * PI, 6, endpoint=False):
-        P.append(_p(tf(box(0.36, 0.042, 0.042),
-                       t=(-0.02, gy + 0.163 * math.cos(roll),
-                          gz + 0.163 * math.sin(roll))), 'green'))
-    P.append(_p(tf(tf(dome(0.15, 12, 6), ry=-PI / 2), t=(-0.2, gy, gz)),
-                'green'))
-    # ложементы
-    for xx in (-0.12, 0.14):
-        P.append(_p(tf(box(0.1, 0.26, 0.14), t=(xx, gy, Z + 0.07)), 'plat'))
-
-    # --- серебристый сегментный барабан: параллельно, за зелёной машиной
-    sy, sz = 0.26, Z + 0.34
-    P.append(_p(tf(tf(dome(0.21, 14, 7), ry=-PI / 2), t=(-0.56, sy, sz)),
-                'silver'))
-    for k, (xx, rr, ww) in enumerate(((-0.44, 0.21, 0.2), (-0.22, 0.23, 0.2),
-                                      (0.0, 0.21, 0.18), (0.18, 0.18, 0.14))):
-        xcyl(cyl(rr, ww, 16), xx, sy, sz, 'silver')
-        xcyl(torus(rr, 0.02, 16, 6), xx + ww / 2, sy, sz, 'plat')
-    xcyl(cyl(0.12, 0.06, 12), 0.28, sy, sz, 'graph')
-    # панелька-люк на барабане
-    P.append(_p(tf(box(0.12, 0.02, 0.1), t=(-0.22, sy - 0.23, sz + 0.02)),
-                'coil2'))
-    for xx in (-0.4, 0.04):
-        P.append(_p(tf(box(0.12, 0.3, 0.18), t=(xx, sy, Z + 0.09)), 'plat'))
-
-    # --- тёмная панель-радиатор в медной раме (сзади, вдоль X)
-    px, py = -0.15, 0.56
-    P.append(_p(tf(box(1.05, 0.07, 0.62), t=(px, py, Z + 0.42)), 'graph'))
+    # --- panel-a: вдоль грани d (левая грань, тянется по Y)
+    panel_thick = 0.07
+    px = -half + panel_thick / 2          # -0.815
+    panel_inner_x = -half + panel_thick   # -0.78 (лицевая сторона панели)
+    py = 0.28
+    plen = 1.05
+    P.append(_p(tf(box(panel_thick, plen, 0.62), t=(px, py, Z + 0.42)),
+                'graph'))
     for dz in (0.72, 0.12):
-        P.append(_p(tf(box(1.09, 0.05, 0.05), t=(px, py, Z + dz)), 'copper'))
+        P.append(_p(tf(box(0.1, plen + 0.04, 0.05), t=(px, py, Z + dz)),
+                    'copper'))
     for sgn in (-1, 1):
-        P.append(_p(tf(box(0.05, 0.05, 0.64), t=(px + sgn * 0.53, py,
-                                                 Z + 0.42)), 'copper'))
+        P.append(_p(tf(box(0.1, 0.05, 0.64),
+                       t=(px, py + sgn * (plen / 2 - 0.01), Z + 0.42)),
+                    'copper'))
     for k in range(8):
-        P.append(_p(tf(box(0.05, 0.09, 0.4),
-                       t=(px - 0.42 + k * 0.075, py + 0.02, Z + 0.34)),
-                    'dark'))
-    P.append(_p(tf(box(0.24, 0.03, 0.16), t=(px + 0.3, py - 0.05, Z + 0.6)),
-                'bglow'))
+        P.append(_p(tf(box(0.09, 0.05, 0.4),
+                       t=(px + 0.02, py - plen / 2 + 0.08 + k * (plen - 0.16)
+                          / 7, Z + 0.34)), 'dark'))
+    P.append(_p(tf(box(0.05, 0.24, 0.16),
+                   t=(px + 0.06, py + plen / 2 - 0.22, Z + 0.6)), 'bglow'))
     for k, tag in enumerate(('teal', 'yellow', 'blue')):
-        P.append(_p(arc_pipe((px - 0.3 + k * 0.09, py - 0.04, Z + 0.7),
-                             (px - 0.05 + k * 0.09, py - 0.04, Z + 0.66),
-                             (0, -0.03, 0.05), 0.012), tag))
+        yy = py + plen / 2 - 0.3 + k * 0.09
+        P.append(_p(arc_pipe((px, yy, Z + 0.7), (px, yy, Z + 0.66),
+                             (0.05, 0, 0.05), 0.012), tag))
 
-    # --- геокупол со шлюзом (слева-спереди)
-    dx, dy = -0.45, -0.3
-    P.append(_p(tf(cyl(0.37, 0.06, 18), t=(dx, dy, Z + 0.03)), 'silver'))
-    g, fr = _geodome_dev(0.34)
-    P.append(_p(tf(g, t=(dx, dy, Z + 0.06)), 'glass'))
-    P.append(_p(tf(fr, t=(dx, dy, Z + 0.06)), 'silver'))
-    # восьмигранный модуль-шлюз правее купола (как в рефе)
-    P.append(_p(tf(tf(cyl(0.11, 0.08, 8), rx=PI / 2),
-                   t=(-0.02, -0.3, Z + 0.14), rz=PI / 8), 'plat'))
-    P.append(_p(tf(tf(cyl(0.07, 0.1, 8), rx=PI / 2),
-                   t=(-0.02, -0.31, Z + 0.14), rz=PI / 8), 'graph'))
-    P.append(_p(tf(tf(cyl(0.04, 0.03, 8), rx=PI / 2),
-                   t=(-0.02, -0.35, Z + 0.14), rz=PI / 8), 'bglow'))
+    # --- drum-a: параллельно оси X, торцом (dome) к panel-a, боком к грани c
+    drum_r = 0.21
+    drum_y = half - 0.23 - 0.02             # 0.60 — у грани c (с учётом макс. радиуса торцевых колец 0.23)
+    drum_dome_x = panel_inner_x + drum_r   # торец у панели
+    # исходные относительные смещения (от dome-центра исходного рецепта)
+    drum_rel = (0.0, 0.12, 0.34, 0.56, 0.72, 0.75)
+    d0 = drum_dome_x
+    P.append(_p(tf(tf(dome(0.21, 14, 7), ry=-PI / 2),
+                   t=(d0 + drum_rel[0], drum_y, Z + 0.34)), 'silver'))
+    drum_segs = ((0.12, 0.21, 0.2), (0.34, 0.23, 0.2), (0.56, 0.21, 0.18),
+                (0.72, 0.18, 0.14))
+    for (rel, rr, ww) in drum_segs:
+        xcyl(cyl(rr, ww, 16), d0 + rel, drum_y, Z + 0.34, 'silver')
+        xcyl(torus(rr, 0.02, 16, 6), d0 + rel + ww / 2, drum_y, Z + 0.34,
+             'plat')
+    drum_end_x = d0 + 0.72 + 0.14 / 2      # правый торец барабана
+    xcyl(cyl(0.12, 0.06, 12), drum_end_x + 0.06, drum_y, Z + 0.34, 'graph')
+    drum_end_x += 0.12
+    # панелька-люк на барабане
+    P.append(_p(tf(box(0.12, 0.02, 0.1),
+                   t=(d0 + 0.34, drum_y - 0.23, Z + 0.36)), 'coil2'))
+    for rel in (0.0, 0.56):
+        P.append(_p(tf(box(0.12, 0.3, 0.18),
+                       t=(d0 + rel, drum_y, Z + 0.09)), 'plat'))
 
-    # --- стойки-серверы (справа, вдоль правой грани) + бак
-    for (bx, by, hh) in ((0.52, 0.3, 0.52), (0.52, 0.06, 0.44)):
-        P.append(_p(tf(box(0.15, 0.13, hh), t=(bx, by, Z + hh / 2)), 'copper'))
-        for j in range(4):
-            P.append(_p(tf(box(0.11, 0.02, 0.05),
-                           t=(bx - 0.075, by, Z + 0.08 + j * hh / 4.5)),
-                        'dark'))
-            P.append(_p(tf(box(0.1, 0.015, 0.03),
-                           t=(bx - 0.078, by, Z + 0.08 + j * hh / 4.5)),
-                        'white'))
-    # бак с карбоновой крышкой
-    P.append(_p(tf(cyl(0.12, 0.42, 14), t=(0.68, 0.42, Z + 0.21)), 'wood'))
-    P.append(_p(tf(cyl(0.13, 0.06, 14), t=(0.68, 0.42, Z + 0.45)), 'graph'))
-    P.append(_p(tf(box(0.1, 0.06, 0.04), t=(0.68, 0.42, Z + 0.5)), 'plat'))
+    # --- engine-a: параллельно, торцом (dome) к panel-a, боком к drum-a
+    engine_dome_r = 0.15
+    engine_r = 0.17
+    engine_y = drum_y - drum_r - engine_r - 0.02   # 0.22 — сторона к drum
+    engine_dome_x = panel_inner_x + engine_dome_r
+    e0 = engine_dome_x
+    # исходные относительные смещения от dome-центра (было xx=-0.2)
+    def erel(orig_xx):
+        return orig_xx - (-0.2)
 
-    # --- белый зажим COLO-LINEY и арки рукавов (в плоскости правой грани)
-    P.append(_p(tf(box(0.3, 0.2, 0.16), t=(0.52, -0.32, Z + 0.1)), 'white'))
-    P.append(_p(tf(box(0.32, 0.06, 0.06), t=(0.52, -0.32, Z + 0.2)),
+    P.append(_p(tf(tf(dome(0.15, 12, 6), ry=-PI / 2),
+                   t=(e0, engine_y, Z + 0.26)), 'green'))
+    # стеклянная секция в зелёной клетке, удлинена для симметрии с drum-a
+    cage_len = 0.62
+    xcyl(cyl(0.15, cage_len, 14), e0 + 0.05 + cage_len / 2, engine_y,
+         Z + 0.26, 'glass')
+    xcyl(cyl(0.095, cage_len - 0.04, 10), e0 + 0.05 + cage_len / 2, engine_y,
+         Z + 0.26, 'detail')
+    for f in (0.06, 0.36, 0.66):
+        xcyl(cyl(0.17, 0.055, 14), e0 + 0.05 + f, engine_y, Z + 0.26,
+             'green')
+    for roll in np.linspace(0, 2 * PI, 6, endpoint=False):
+        P.append(_p(tf(box(cage_len + 0.02, 0.042, 0.042),
+                       t=(e0 + 0.05 + cage_len / 2,
+                          engine_y + 0.163 * math.cos(roll),
+                          Z + 0.26 + 0.163 * math.sin(roll))), 'green'))
+    cage_end_x = e0 + 0.05 + cage_len
+    # серебристый воротник + нос
+    xcyl(cyl(0.14, 0.05, 12), cage_end_x + 0.025, engine_y, Z + 0.26,
+         'silver')
+    xcyl(cyl(0.125, 0.09, 12, r2=0.085), cage_end_x + 0.115, engine_y,
+         Z + 0.26, 'green')
+    nose_c = cage_end_x + 0.16 + 0.1
+    xcyl(cyl(0.09, 0.2, 12, r2=0.045), nose_c, engine_y, Z + 0.26, 'green')
+    engine_end_x = nose_c + 0.1            # кончик носа
+    # ложементы
+    for xx in (e0 + 0.3, cage_end_x - 0.1):
+        P.append(_p(tf(box(0.1, 0.26, 0.14), t=(xx, engine_y, Z + 0.07)),
+                    'plat'))
+
+    # --- геокупол со шлюзом: максимально к грани a
+    dome_r = 0.34
+    ddx, ddy = -0.38, -half + dome_r + 0.03   # к грани a
+    P.append(_p(tf(cyl(dome_r * 1.05, 0.06, 18), t=(ddx, ddy, Z + 0.03)),
                 'silver'))
-    for (hx, cy, R, z0) in ((0.82, -0.08, 0.26, 0.24), (0.68, -0.12, 0.18,
-                                                        0.18)):
+    g, fr = _geodome_dev(dome_r)
+    P.append(_p(tf(g, t=(ddx, ddy, Z + 0.06)), 'glass'))
+    P.append(_p(tf(fr, t=(ddx, ddy, Z + 0.06)), 'silver'))
+    # --- gate-a: восьмигранный модуль-шлюз правее купола
+    gx, gy_ = ddx + dome_r + 0.16, ddy
+    P.append(_p(tf(tf(cyl(0.11, 0.08, 8), rx=PI / 2), t=(gx, gy_, Z + 0.14),
+                   rz=PI / 8), 'plat'))
+    P.append(_p(tf(tf(cyl(0.07, 0.1, 8), rx=PI / 2),
+                   t=(gx, gy_ - 0.01, Z + 0.14), rz=PI / 8), 'graph'))
+    P.append(_p(tf(tf(cyl(0.04, 0.03, 8), rx=PI / 2),
+                   t=(gx, gy_ - 0.05, Z + 0.14), rz=PI / 8), 'bglow'))
+
+    # --- tank-a: у второго (правого) торца drum-a
+    tank_r = 0.12
+    tank_x = drum_end_x + tank_r + 0.02
+    tank_y = drum_y
+    P.append(_p(tf(cyl(tank_r, 0.42, 14), t=(tank_x, tank_y, Z + 0.21)),
+                'wood'))
+    P.append(_p(tf(cyl(tank_r + 0.01, 0.06, 14), t=(tank_x, tank_y, Z + 0.45)),
+                'graph'))
+    P.append(_p(tf(box(0.1, 0.06, 0.04), t=(tank_x, tank_y, Z + 0.5)),
+                'plat'))
+
+    # --- rack-a / шкаф / rack-b: компактная группа, оси a (X), у грани b;
+    # связана короткими кабелями с tank-a и торцом engine-a
+    rack_hw, cab_hw = 0.05, 0.07
+    rack_row_y = engine_y + 0.1
+    rack_a_x = 0.5
+    cab_x = rack_a_x + rack_hw + cab_hw + 0.02
+    rack_b_x = cab_x + cab_hw + rack_hw + 0.02   # <= half(0.85) - rack_hw
+
+    def rack(cx, cy, hh):
+        P.append(_p(tf(box(rack_hw * 2, 0.13, hh), t=(cx, cy, Z + hh / 2)),
+                    'copper'))
+        for j in range(4):
+            P.append(_p(tf(box(rack_hw * 1.5, 0.02, 0.05),
+                           t=(cx - rack_hw * 0.05, cy - 0.065,
+                              Z + 0.08 + j * hh / 4.5)), 'dark'))
+            P.append(_p(tf(box(rack_hw * 1.3, 0.015, 0.03),
+                           t=(cx - rack_hw * 0.08, cy - 0.068,
+                              Z + 0.08 + j * hh / 4.5)), 'white'))
+
+    rack(rack_a_x, rack_row_y, 0.5)
+    rack(rack_b_x, rack_row_y, 0.44)
+    # шкаф с полками за матовым (полупрозрачным) стеклом
+    cab_h = 0.46
+    P.append(_p(tf(box(cab_hw * 2, 0.15, cab_h), t=(cab_x, rack_row_y, Z +
+                                                     cab_h / 2)), 'dark'))
+    P.append(_p(tf(box(cab_hw * 1.8, 0.02, cab_h * 0.9),
+                   t=(cab_x, rack_row_y - 0.075, Z + cab_h / 2)), 'glass'))
+    for j in range(3):
+        P.append(_p(tf(box(cab_hw * 1.6, 0.1, 0.02),
+                       t=(cab_x, rack_row_y, Z + 0.1 + j * cab_h / 3)),
+                    'plat'))
+    # короткие кабели-перемычки: tank-a -> rack-a, торец engine-a -> rack-b
+    P.append(_p(tube(np.array([(tank_x + tank_r * 0.6, tank_y, Z + 0.2),
+                               (rack_a_x - rack_hw, rack_row_y, Z + 0.2)]),
+                     0.022, 6), 'plat'))
+    P.append(_p(tube(np.array([(engine_end_x, engine_y, Z + 0.15),
+                               (rack_b_x - rack_hw, rack_row_y, Z + 0.15)]),
+                     0.022, 6), 'plat'))
+
+    # --- clamp-a: вдоль грани b, у tank-a, стоит на длинном ребре
+    clamp_x = tank_x + tank_r + 0.1
+    clamp_y = tank_y
+    P.append(_p(tf(box(0.16, 0.2, 0.3), t=(clamp_x, clamp_y, Z + 0.15)),
+                'white'))
+    P.append(_p(tf(box(0.18, 0.22, 0.05), t=(clamp_x, clamp_y, Z + 0.31)),
+                'silver'))
+
+    # --- hose-a/hose-b: выходят из clamp-a одним торцом, огибают сверху
+    # rack-группу (rack-a и rack-b)
+    for k, (target_x, ry) in enumerate(((rack_a_x, rack_row_y),
+                                        (rack_b_x, rack_row_y))):
+        R = 0.16 + 0.04 * k
         ts = np.linspace(0, PI, 14)
-        path = np.array([(hx + 0.03 * math.sin(t), cy - R * math.cos(t),
-                          Z + z0 + R * 1.05 * math.sin(t)) for t in ts])
-        P.append(_p(tube(path, 0.038, 9), 'gold'))
+        path = np.array([
+            (clamp_x - t / PI * (clamp_x - target_x),
+             clamp_y - (clamp_y - ry) * (t / PI),
+             Z + 0.3 + R * 1.2 * math.sin(t))
+            for t in ts])
+        P.append(_p(tube(path, 0.032, 9), 'gold'))
         for pt in (path[0], path[-1]):
-            P.append(_p(tf(cyl(0.052, 0.07, 9),
-                           t=(pt[0], pt[1], pt[2] - 0.03)), 'silver'))
+            P.append(_p(tf(cyl(0.042, 0.06, 9),
+                           t=(pt[0], pt[1], pt[2] - 0.025)), 'silver'))
 
-    # --- зелёное кольцо-«гайка» (правее купола, как в рефе)
-    P.append(_p(tf(torus(0.11, 0.04, 8, 6), t=(-0.14, -0.52, Z + 0.04),
-                   rz=PI / 8), 'green'))
-    P.append(_p(tf(torus(0.13, 0.05, 8, 6), t=(-0.14, -0.52, Z + 0.2),
-                   rx=PI / 2.15, rz=0.3), 'green'))
 
-    # --- упорядоченный ряд мини-приборов (две шеренги вдоль X)
-    back_row = ((0.08, 'blue', 0.3), (0.17, 'teal', 0.26),
-                (0.26, 'graph', 0.34))
-    front_row = ((0.05, 'coil', 0.16), (0.14, 'yellow', 0.22),
-                 (0.23, 'white', 0.12))
-    for (mx, tag, hh) in back_row:
-        P.append(_p(tf(box(0.055, 0.05, hh), t=(mx, -0.48, Z + hh / 2)), tag))
-        P.append(_p(tf(box(0.04, 0.035, 0.02),
-                       t=(mx, -0.48, Z + hh + 0.01)), 'dark'))
-        P.append(_p(tf(cyl(0.005, 0.07, 5), t=(mx, -0.48, Z + hh + 0.05)),
-                    'silver'))
-    for (mx, tag, hh) in front_row:
-        P.append(_p(tf(box(0.05, 0.045, hh), t=(mx, -0.6, Z + hh / 2)), tag))
-        P.append(_p(tf(box(0.035, 0.03, 0.015),
-                       t=(mx, -0.6, Z + hh + 0.008)), 'dark'))
-
-    # --- три яйца-бака в ряд вдоль X (спереди-справа)
-    for k, ex in enumerate((0.4, 0.54, 0.68)):
-        ey = -0.6 + 0.05 * (k % 2)
+    # --- egg-a/b/c: угол граней a-b, далее вдоль грани b
+    egg_r = 0.085
+    egg_x = half - egg_r - 0.04
+    egg_y0 = -half + egg_r + 0.04
+    for k in range(3):
+        ex, ey = egg_x, egg_y0 + k * (2 * egg_r + 0.06)
         P.append(_p(tf(cyl(0.06, 0.03, 10), t=(ex, ey, Z + 0.015)), 'plat'))
-        P.append(_p(tf(sphere(0.085, 10, 8), t=(ex, ey, Z + 0.12),
+        P.append(_p(tf(sphere(egg_r, 10, 8), t=(ex, ey, Z + 0.12),
                        s=(1, 1, 1.25)), 'teal'))
 
-    # --- флагшток с латунным рваным флагом (задний левый угол)
-    fx, fy = -0.68, 0.55
+    # --- mini-a..f: следующий ряд за яйцами, вдоль грани b (интерьер)
+    mini_x0 = egg_x - 0.22
+    mini_defs = (('blue', 0.3), ('teal', 0.26), ('graph', 0.34),
+                ('coil', 0.16), ('yellow', 0.22), ('white', 0.12))
+    for k, (tag, hh) in enumerate(mini_defs):
+        col = k % 2
+        row = k // 2
+        mx = mini_x0 - col * 0.11
+        my = egg_y0 + row * (2 * egg_r + 0.06)
+        P.append(_p(tf(box(0.055, 0.05, hh), t=(mx, my, Z + hh / 2)), tag))
+        P.append(_p(tf(box(0.04, 0.035, 0.02), t=(mx, my, Z + hh + 0.01)),
+                    'dark'))
+        if col == 0:
+            P.append(_p(tf(cyl(0.005, 0.07, 5), t=(mx, my, Z + hh + 0.05)),
+                        'silver'))
+
+    # --- ring-a: лежит плашмя, следом за рядом mini вдоль грани b
+    ring_y = egg_y0 + 3 * (2 * egg_r + 0.06)
+    ring_x = mini_x0 - 0.05
+    P.append(_p(tf(torus(0.13, 0.05, 8, 6), t=(ring_x, ring_y, Z + 0.05)),
+                'green'))
+    P.append(_p(tf(torus(0.09, 0.035, 8, 6), t=(ring_x, ring_y, Z + 0.11)),
+                'green'))
+
+    # --- флагшток с латунным рваным флагом (угол граней c-d)
+    fx, fy = -half + 0.1, half - 0.15
     P.append(_p(tf(cyl(0.016, 1.05, 8), t=(fx, fy, Z + 0.52)), 'silver'))
     P.append(_p(tf(sphere(0.03, 8, 6), t=(fx, fy, Z + 1.06)), 'silver'))
     P.append(_p(tf(box(0.24, 0.02, 0.15), t=(fx + 0.13, fy, Z + 0.93)),

@@ -1249,8 +1249,8 @@ def aux_colonizer(seed=0):
     P.append(_p(tf(torus(0.09, 0.035, 8, 6), t=(ring_x, ring_y, Z + 0.11)),
                 'green'))
 
-    # --- флагшток с латунным рваным флагом (угол граней c-d)
-    fx, fy = -half + 0.1, half - 0.15
+    # --- флагшток с латунным рваным флагом (угол граней d-a)
+    fx, fy = -half + 0.08, -half + 0.08
     P.append(_p(tf(cyl(0.016, 1.05, 8), t=(fx, fy, Z + 0.52)), 'silver'))
     P.append(_p(tf(sphere(0.03, 8, 6), t=(fx, fy, Z + 1.06)), 'silver'))
     P.append(_p(tf(box(0.24, 0.02, 0.15), t=(fx + 0.13, fy, Z + 0.93)),
@@ -1274,60 +1274,120 @@ def _geodome_dev(r, seg=14, rings=6):
     return glass, combine_vf(parts)
 
 
+def _bomb(P, cx, cy, cz, length=0.32, r=0.045, tag='dark', fin_tag='redline'):
+    """Авиабомба: вытянутое тело, закруглённый нос, хвостовой стабилизатор
+    (горизонтальные плоскости) + вертикальный киль под прямым углом к ним.
+    Строится в локальных Z-координатах (нос в +Z), затем целиком
+    разворачивается так, чтобы нос смотрел в мировые -Y."""
+    body_len = length * 0.62
+    hull_local = combine_vf([cyl(r, body_len, 10),
+                             tf(dome(r, 10, 5), t=(0, 0, body_len / 2))])
+    P.append(_p(tf(hull_local, rx=PI / 2, t=(cx, cy, cz)), tag))
+    tail_z = -body_len / 2 - 0.01
+    fin_span, fin_th, fin_h = r * 3.4, 0.012, r * 1.4
+    stab = tf(box(fin_span, fin_th, fin_h), t=(0, 0, tail_z))
+    P.append(_p(tf(stab, rx=PI / 2, t=(cx, cy, cz)), fin_tag))
+    vfin = tf(box(0.012, fin_h * 1.15, fin_h * 1.3),
+             t=(0, fin_h * 0.55, tail_z + fin_h * 0.15))
+    P.append(_p(tf(vfin, rx=PI / 2, t=(cx, cy, cz)), fin_tag))
+
+
 def aux_invasion_module(seed=0):
-    """Жёлтый бронированный клин-десантник с бирюзовыми рёбрами, красной
-    трубной обвязкой и тремя дронами на плите (реф Aux_InvasionModule)."""
+    """Десантный модуль (реф Aux_InvasionModule): приплюснутый гранёный
+    корпус (без гладких поверхностей) из ступенчатых плит, вытянутый к
+    носу (+Y); два симметричных параллельных решётчатых радиатора на
+    крыше; хвостовые дюзы; 4 авиабомбы на подложке в 2х2 упорядоченной
+    сетке, плоская подложка сразу за рядами бомб."""
     P = []
     Z = PLATE_TOP
-    # корпус-клин (нос в +Y)
-    P.append(_p(tf(loft_z([(Z + 0.1, [(0.42, -0.55), (0.42, 0.35),
-                                      (0.15, 0.62), (-0.15, 0.62),
-                                      (-0.42, 0.35), (-0.42, -0.55)]),
-                           (Z + 0.62, [(0.22, -0.42), (0.22, 0.18),
-                                       (0.08, 0.38), (-0.08, 0.38),
-                                       (-0.22, 0.18), (-0.22, -0.42)])]),
-                   t=(0, -0.05, 0), rz=0), 'yellow'))
-    # накладные плиты брони
-    for (px, py, pz, w, l, rzz) in ((-0.28, 0.15, 0.45, 0.22, 0.3, 0.3),
-                                    (0.28, 0.05, 0.48, 0.24, 0.34, -0.25),
-                                    (0.0, 0.35, 0.4, 0.3, 0.24, 0.0)):
-        P.append(_p(tf(box(w, l, 0.1), t=(px, py - 0.05, Z + pz), rz=rzz),
+
+    # --- корпус: приплюснутый, вытянутый к носу, гранёные ступени
+    hull_w, hull_l, hull_h = 0.8, 0.62, 0.13
+    hull_y = 0.18
+    P.append(_p(tf(box(hull_w, hull_l, hull_h),
+                   t=(0, hull_y, Z + hull_h / 2)), 'yellow'))
+    # фаски по бокам нижней палубы (гранёные скосы, не гладкие)
+    for sgn in (-1, 1):
+        P.append(_p(tf(box(0.12, hull_l * 0.94, hull_h * 0.85),
+                       t=(sgn * (hull_w / 2 - 0.02), hull_y,
+                          Z + hull_h / 2), rz=sgn * 0.1), 'teal'))
+    # верхняя палуба — уже, смещена к носу
+    deck_w, deck_l, deck_h = 0.56, 0.42, 0.11
+    deck_y = hull_y + 0.14
+    P.append(_p(tf(box(deck_w, deck_l, deck_h),
+                   t=(0, deck_y, Z + hull_h + deck_h / 2)), 'yellow'))
+    # носовой клин — две убывающие ступени (гранёный, без revolve/dome)
+    nose1_w, nose1_l, nose1_h = 0.4, 0.22, 0.09
+    nose1_y = deck_y + deck_l / 2 + nose1_l / 2 - 0.02
+    P.append(_p(tf(box(nose1_w, nose1_l, nose1_h),
+                   t=(0, nose1_y, Z + hull_h + deck_h * 0.4 + nose1_h / 2)),
+                'yellow'))
+    nose2_w, nose2_l, nose2_h = 0.22, 0.16, 0.07
+    nose2_y = nose1_y + nose1_l / 2 + nose2_l / 2 - 0.06
+    P.append(_p(tf(box(nose2_w, nose2_l, nose2_h),
+                   t=(0, nose2_y, Z + hull_h + deck_h * 0.4 + nose2_h / 2)),
+                'teal'))
+
+    # --- боковые гранёные плиты-«крылья» (как накладная броня в рефе)
+    for (px, py, pz, w, l, rzz) in ((-0.42, 0.02, 0.22, 0.2, 0.34, 0.16),
+                                    (0.42, -0.06, 0.24, 0.22, 0.36, -0.14)):
+        P.append(_p(tf(box(w, l, 0.08), t=(px, py, Z + pz), rz=rzz),
                     'yellow'))
-    # бирюзовые рёбра-радиаторы на хребте
-    for k in range(2):
-        P.append(_p(tf(box(0.3, 0.35, 0.12),
-                       t=(-0.1 + 0.25 * k, -0.3 + 0.15 * k, Z + 0.68)),
-                    'teal'))
-        for j in range(6):
-            P.append(_p(tf(box(0.28, 0.025, 0.16),
-                           t=(-0.1 + 0.25 * k,
-                              -0.44 + 0.15 * k + j * 0.055, Z + 0.72)),
+
+    # --- рёбра вентиляции на верхней палубе (тонкие гранёные ламели)
+    for j in range(6):
+        P.append(_p(tf(box(deck_w * 0.85, 0.02, 0.05),
+                       t=(0, deck_y - deck_l / 2 + 0.05 + j *
+                          (deck_l - 0.1) / 5, Z + hull_h + deck_h + 0.03)),
+                    'dark'))
+
+    # --- два радиатора: симметрично и параллельно по оси корпуса (Y),
+    # на крыше нижней палубы, по обе стороны от верхней палубы
+    rad_w, rad_l, rad_h = 0.16, 0.4, 0.14
+    rad_y = hull_y - 0.05
+    rad_z = Z + hull_h
+    for sgn in (-1, 1):
+        rx_ = sgn * (deck_w / 2 + rad_w / 2 + 0.02)
+        P.append(_p(tf(box(rad_w, rad_l, 0.03),
+                       t=(rx_, rad_y, rad_z + 0.015)), 'teal'))
+        for j in range(9):
+            P.append(_p(tf(box(rad_w * 0.92, 0.018, rad_h),
+                           t=(rx_, rad_y - rad_l / 2 + 0.03 + j *
+                              (rad_l - 0.06) / 8, rad_z + rad_h / 2 + 0.02)),
                         'graph'))
-    # красная трубная обвязка на борту
+
+    # --- красная трубная обвязка вдоль борта
     for j in range(3):
-        P.append(_p(arc_pipe((-0.4, -0.35 + 0.12 * j, Z + 0.3),
-                             (-0.15, 0.3 + 0.06 * j, Z + 0.35),
-                             (-0.12, 0, 0.12), 0.028), 'coil'))
-    # кормовые сопла (назад, -Y)
-    for dx in (-0.16, 0.05):
-        P.append(_p(tf(tf(cyl(0.09, 0.16, 12), rx=PI / 2),
-                       t=(dx, -0.68, Z + 0.3)), 'dark'))
-        P.append(_p(tf(tf(torus(0.09, 0.018, 12, 6), rx=PI / 2),
-                       t=(dx, -0.76, Z + 0.3)), 'plat'))
-    # красный блок слева
-    P.append(_p(tf(box(0.16, 0.4, 0.14), t=(-0.55, -0.35, Z + 0.07)), 'coil'))
-    # три дрона-жука на плите
-    rng = np.random.default_rng(seed + 23)
-    for (dx, dy) in ((0.45, -0.5), (0.2, -0.72), (0.62, -0.15)):
-        rzz = rng.uniform(-0.5, 0.5)
-        P.append(_p(tf(box(0.14, 0.18, 0.08), t=(dx, dy, Z + 0.06), rz=rzz),
-                    'yellow'))
-        P.append(_p(tf(box(0.1, 0.08, 0.05), t=(dx, dy - 0.08, Z + 0.1),
-                       rz=rzz), 'teal'))
-        for sgn in (-1, 1):
-            P.append(_p(tf(tf(cyl(0.025, 0.05, 6), rx=PI / 2),
-                           t=(dx + sgn * 0.05, dy + 0.09, Z + 0.05), rz=rzz),
-                        'dark'))
+        yy = hull_y - 0.2 + j * 0.16
+        P.append(_p(arc_pipe((-hull_w / 2 + 0.03, yy, Z + 0.05),
+                             (-hull_w / 2 + 0.03, yy, Z + hull_h + 0.1),
+                             (-0.06, 0, 0.08), 0.022), 'coil'))
+
+    # --- хвостовые дюзы (корма — сторона -Y от корпуса, слегка утоплены
+    # в хвост, разнесены по X шире бомбовых колонок)
+    tail_y = hull_y - hull_l / 2 + 0.02
+    for dx in (-0.22, 0.2):
+        P.append(_p(tf(tf(cyl(0.09, 0.14, 12), rx=PI / 2),
+                       t=(dx, tail_y, Z + 0.3)), 'dark'))
+        P.append(_p(tf(tf(torus(0.09, 0.016, 12, 6), rx=PI / 2),
+                       t=(dx, tail_y - 0.08, Z + 0.3)), 'plat'))
+
+    # --- 4 авиабомбы: 2х2 упорядоченная сетка, носом к -Y, хвостом к
+    # подложке (+Y от бомб); интервал между рядами больше длины бомбы,
+    # чтобы они не сливались в одну фигуру
+    col_x = (-0.15, 0.15)
+    row_y = (-0.68, -0.34)
+    bomb_r = 0.045
+    for by in row_y:
+        for bx in col_x:
+            _bomb(P, bx, by, Z + bomb_r, length=0.32, r=bomb_r)
+
+    # --- плоская подложка сразу за рядами бомб (со стороны хвостов, +Y)
+    pallet_y = row_y[1] + 0.14
+    P.append(_p(tf(box(0.56, 0.11, 0.04),
+                   t=(0, pallet_y, Z + 0.02)), 'coil'))
+    P.append(_p(tf(box(0.5, 0.02, 0.045),
+                   t=(0, pallet_y + 0.045, Z + 0.04)), 'coil2'))
     return merge(P)
 
 

@@ -10,7 +10,7 @@
 
 from device_meshes import *
 from building_meshes import dish_mesh, octahedron, loft_z
-import numpy as np, math
+import numpy as np, math, os
 PI = math.pi
 
 PLATE_TOP = 0.16
@@ -1275,135 +1275,31 @@ def _geodome_dev(r, seg=14, rings=6):
     return glass, combine_vf(parts)
 
 
+_INVASION_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "invasion_module_mesh.npz")
+
+
 def aux_invasion_module(seed=0):
-    """Десантный штурмовой модуль (реф Aux_core_InvasionModule_2.glb —
-    100% эталон, импортированный меш заменён процедурной реконструкцией:
-    исходник 1.76M вершин/129MB, не подходит по размеру и стилю пайплайна
-    без текстур). Приземистый гранёный корпус: бирюзовый корпус-«лодка»
-    снизу, жёлтая сегментная броня сверху, 2 рёбристых радиатора, один
-    крупный кормовой двигатель, носовой «шлем» с антенной-манипулятором,
-    красная трубная обвязка. Рядом с корпусом — 2 мелкие колёсные
-    тележки (не бомбы, как в прежних версиях)."""
-    P = []
-    Z = PLATE_TOP
-    cx, cy = 0.05, 0.15
-
-    # --- корпус-«лодка»: гранёные ступени, шире и выше у кормы (-X),
-    # сужаются к носу (+X)
-    n_seg = 4
-    hull_len = 0.72
-    x0 = cx - hull_len / 2
-    seg_len = hull_len / n_seg
-    hull_w = np.linspace(0.5, 0.26, n_seg)
-    hull_h = np.linspace(0.2, 0.13, n_seg)
-    seg_x, seg_top = [], []
-    for i in range(n_seg):
-        sx = x0 + seg_len * (i + 0.5)
-        w, h = hull_w[i], hull_h[i]
-        P.append(_p(tf(box(seg_len + 0.01, w, h), t=(sx, cy, Z + h / 2)),
-                    'teal'))
-        seg_x.append(sx); seg_top.append(Z + h)
-    nose_x = cx + hull_len / 2
-    stern_x = cx - hull_len / 2
-
-    # --- жёлтая сегментная броня поверх корпуса (короче и уже, не
-    # доходит до самого носа — там отдельный «шлем»)
-    n_arm = 3
-    arm_len = hull_len * 0.72
-    ax0 = stern_x + 0.03
-    arm_seg = arm_len / n_arm
-    arm_w = np.linspace(0.42, 0.24, n_arm)
-    arm_h = 0.1
-    arm_top = []
-    for i in range(n_arm):
-        sx = ax0 + arm_seg * (i + 0.5)
-        w = arm_w[i]
-        base_h = hull_h[min(int(i * n_seg / n_arm), n_seg - 1)]
-        z0 = Z + base_h
-        P.append(_p(tf(box(arm_seg + 0.01, w, arm_h), t=(sx, cy, z0 + arm_h / 2)),
-                    'yellow'))
-        arm_top.append(z0 + arm_h)
-
-    # --- носовой «шлем» с антенной-манипулятором
-    head_x = ax0 + arm_len + 0.05
-    head_z0 = Z + hull_h[-1]
-    P.append(_p(tf(box(0.14, 0.22, 0.11), t=(head_x, cy, head_z0 + 0.055)),
-                'yellow'))
-    P.append(_p(tf(box(0.08, 0.14, 0.06),
-                   t=(head_x + 0.08, cy, head_z0 + 0.14)), 'teal'))
-    arm_base = np.array([head_x + 0.02, cy - 0.02, head_z0 + 0.1])
-    arm_tip = arm_base + np.array([0.22, -0.1, 0.16])
-    P.append(_p(tube(np.array([arm_base, arm_tip]), 0.012, 6), 'plat'))
-    P.append(_p(tf(sphere(0.016, 6, 5), t=tuple(arm_tip)), 'dark'))
-
-    # --- 2 рёбристых радиатора на броне, симметрично по бокам оси X
-    rad_l, rad_w, rad_h = 0.26, 0.11, 0.09
-    rad_x = ax0 + arm_len * 0.42
-    rad_z = arm_top[min(1, n_arm - 1)]
-    for sgn in (-1, 1):
-        ry = cy + sgn * (rad_w / 2 + 0.04)
-        P.append(_p(tf(box(rad_l, rad_w, 0.02), t=(rad_x, ry, rad_z + 0.01)),
-                    'teal'))
-        for j in range(9):
-            P.append(_p(tf(box(0.016, rad_w * 0.9, rad_h),
-                           t=(rad_x - rad_l / 2 + 0.03 + j * (rad_l - 0.06)
-                              / 8, ry, rad_z + rad_h / 2 + 0.015)), 'graph'))
-
-    # --- кормовой двигатель: один крупный цилиндр с тёмным соплом
-    eng_r = 0.15
-    eng_len = 0.22
-    eng_x = stern_x - eng_len / 2 + 0.02
-    eng_z = Z + max(hull_h[0] * 0.55, eng_r + 0.01)
-    P.append(_p(tf(tf(cyl(eng_r, eng_len, 16), ry=PI / 2),
-                   t=(eng_x, cy, eng_z)), 'teal'))
-    P.append(_p(tf(tf(cyl(eng_r * 0.7, 0.03, 16), ry=PI / 2),
-                   t=(eng_x - eng_len / 2 - 0.01, cy, eng_z)), 'dark'))
-    P.append(_p(tf(tf(torus(eng_r * 0.7, 0.014, 16, 6), ry=PI / 2),
-                   t=(eng_x - eng_len / 2 - 0.01, cy, eng_z)), 'plat'))
-
-    # --- красная трубная обвязка вдоль борта
-    for j in range(3):
-        yy = cy - 0.14 + j * 0.1
-        xx0 = ax0 + arm_len * 0.15
-        P.append(_p(arc_pipe((xx0, yy, Z + hull_h[1] * 0.4),
-                             (xx0 + 0.16, yy, Z + hull_h[1] + 0.02),
-                             (0.05, 0, 0.05), 0.018), 'coil'))
-    P.append(_p(tf(box(0.16, 0.06, 0.05),
-                   t=(stern_x + 0.1, cy - hull_w[0] / 2 + 0.03, Z + 0.03)),
-                'coil'))
-
-    # --- заклёпки вдоль верхнего шва брони (мелкая деталь)
-    rng = np.random.default_rng(seed + 31)
-    for i in range(n_arm):
-        sx = ax0 + arm_seg * (i + 0.5)
-        for sgn in (-1, 1):
-            P.append(_p(tf(sphere(0.008, 5, 4),
-                           t=(sx, cy + sgn * (arm_w[i] / 2 - 0.01),
-                              arm_top[i] - 0.005)), 'plat'))
-
-    # --- рядом с корпусом: 2 мелкие колёсные тележки (не бомбы)
-    def cart(px, py, rz_):
-        body_w, body_l, body_h = 0.16, 0.11, 0.07
-        wheel_r, wheel_tube = 0.028, 0.012
-        ride_z = Z + wheel_r + wheel_tube   # низ колеса касается плиты
-        P.append(_p(tf(box(body_w, body_l, body_h),
-                       t=(px, py, ride_z + body_h / 2), rz=rz_), 'yellow'))
-        P.append(_p(tf(box(body_w * 0.7, body_l * 0.6, 0.03),
-                       t=(px, py, ride_z + body_h + 0.015), rz=rz_),
-                    'teal'))
-        P.append(_p(tf(sphere(0.018, 6, 5),
-                       t=(px + (body_w / 2 - 0.02) * math.cos(rz_),
-                          py + (body_w / 2 - 0.02) * math.sin(rz_),
-                          ride_z + body_h / 2)), 'coil'))
-        for sgn in (-1, 1):
-            wx = px - sgn * body_l / 2 * math.sin(rz_)
-            wy = py + sgn * body_l / 2 * math.cos(rz_)
-            P.append(_p(tf(tf(torus(wheel_r, wheel_tube, 10, 6), rx=PI / 2),
-                           t=(wx, wy, ride_z), rz=rz_), 'dark'))
-
-    cart(cx - hull_len * 0.28, cy - 0.34, 0.15)
-    cart(cx + hull_len * 0.02, cy - 0.36, -0.1)
-    return merge(P)
+    """Десантный штурмовой модуль — геометрия взята из точного низкополи-
+    гонального референса Aux_core_InvasionModule_3.glb (5723 верш./9839
+    треуг., ~90КБ, без цвета в исходнике). Цвет перенесён с более раннего
+    высокополигонального 100%-эталона Aux_core_InvasionModule_2.glb
+    (129MB, растеризован и не годится для прямого импорта) методом
+    ближайшей точки: с эталона взято ~60k точек поверхности с цветом из
+    базовой текстуры (с переводом linear->sRGB), для каждой грани
+    референса-3 голосованием по 40 ближайшим точкам определён доминирующий
+    оттенок среди узкого набора реальных цветов модели (tan/teal/
+    redbright/copper/dark — остальные теги палитры исключены, иначе
+    многочисленные похожие серые перетягивают грани на себя). Результат
+    сохранён заранее (tools/invasion_module_mesh.npz) и просто грузится
+    здесь — самого тяжёлого референса в рантайме нет."""
+    data = np.load(_INVASION_MESH_PATH)
+    V, F = data["V"], data["F"]
+    tag_idx, tag_names = data["tag_idx"], data["tag_names"]
+    tags = [str(tag_names[i]) for i in tag_idx]
+    V = V.astype(float).copy()
+    V[:, 2] += PLATE_TOP - V[:, 2].min()   # опустить на уровень плиты
+    return V, F.astype(int), tags
 
 
 

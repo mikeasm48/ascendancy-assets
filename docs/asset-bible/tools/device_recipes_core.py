@@ -196,222 +196,79 @@ def star_lane_hyperdrive(seed=0):
 
 
 # ============================================================ GENERATORS
+#
+# Все пять генераторов заменены импортированными низкополигональными
+# референсами (пары <имя>_2_model.glb + _2_texture.glb, позиции граней
+# 1:1): цвет перенесён голосованием по 5 ближайшим граням текстурного
+# двойника (сэмпл текстуры по UV-центру грани, linear->sRGB), затем
+# k-means-кластеры сгруппированы в узкие наборы реальных материалов
+# модели (AO-оттенки одного материала слиты, урок InvasionModule).
+# Одинокие эмиссивные грани сняты фильтром по соседям (антиспекл).
+# Родные плиты чистые — оставлены; общая плита каталога отключена
+# (plate=None). Модели отнормированы до макс. габарита 1.0.
+
+_PROTON_SHAVER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "proton_shaver_mesh.npz")
+
 
 def generator_proton_shaver(seed=0):
-    """Синяя центральная колонна с красной обмоткой и четыре угловые
-    катушечные башенки, медная обвязка (реф Generator_ProtonShaver)."""
-    P = []
-    Z = PLATE_TOP
-    # центральная колонна
-    P.append(_p(tf(cyl(0.3, 0.28, 16, r2=0.26), t=(0, 0, Z + 0.14)), 'blue'))
-    P.append(_p(tf(helix_coil(0.21, 0.34, 7, 0.032), t=(0, 0, Z + 0.48)),
-                'coil'))
-    P.append(_p(tf(cyl(0.21, 0.26, 16), t=(0, 0, Z + 0.82)), 'blue'))
-    P.append(_p(tf(torus(0.21, 0.02, 16, 6), t=(0, 0, Z + 0.95)), 'blue'))
-    # угловые башенки
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            x, y = sx * 0.55, sy * 0.55
-            for k in range(4):  # синие рёбра-блины
-                P.append(_p(tf(cyl(0.13 - 0.005 * k, 0.035, 12),
-                               t=(x, y, Z + 0.05 + k * 0.055)), 'blue'))
-            P.append(_p(tf(cyl(0.1, 0.1, 12), t=(x, y, Z + 0.3)), 'gold'))
-            P.append(_p(tf(cyl(0.115, 0.06, 12), t=(x, y, Z + 0.38)), 'blue'))
-            P.append(_p(tf(helix_coil(0.095, 0.16, 5, 0.02),
-                           t=(x, y, Z + 0.5)), 'coil'))
-            P.append(_p(tf(cyl(0.085, 0.07, 12), t=(x, y, Z + 0.62)),
-                        'silver'))
-            # медные трубки к колонне
-            P.append(_p(arc_pipe((x * 0.75, y * 0.75, Z + 0.55),
-                                 (x * 0.25, y * 0.25, Z + 0.72),
-                                 (0, 0, 0.1), 0.016), 'copper'))
-            P.append(_p(arc_pipe((x * 0.8, y * 0.8, Z + 0.42),
-                                 (x * 0.3, y * 0.3, Z + 0.35),
-                                 (0, 0, 0.06), 0.016), 'copper'))
-    # жёлтые поперечины
-    for rzz in (0, PI / 2):
-        P.append(_p(tf(box(1.35, 0.05, 0.04), t=(0, 0, Z + 0.33), rz=rzz),
-                    'yellow'))
-    return merge(P)
+    """Импорт Generator_core_ProtonShaver_2_model.glb (14776 треуг.):
+    серебристая плита, синие башни-цилиндры с медно-красными обмотками
+    (pscoil), латунная обвязка (psbrass). Теги: pssilver/psblue/
+    psbrass/pscoil."""
+    return _load_imported_mesh(_PROTON_SHAVER_MESH_PATH)
+
+
+_SUBATOMIC_SCOOP_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "subatomic_scoop_mesh.npz")
 
 
 def generator_subatomic_scoop(seed=0):
-    """Двойная стеклянная чаша-воронка с вихрем на колонне, синие
-    перфорированные пилоны и боковые капсулы (реф Generator_SubatomicScoop)."""
-    P = []
-    Z = PLATE_TOP
-    # медное кольцо-основание
-    P.append(_p(tf(cyl(0.52, 0.07, 20), t=(0, 0, Z + 0.035)), 'copper'))
-    # шесть синих пилонов-плавников
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        x, y = 0.33 * math.cos(a), 0.33 * math.sin(a)
-        P.append(_p(tf(tf(box(0.05, 0.3, 0.42), rx=0.35),
-                       t=(x, y, Z + 0.28), rz=a + PI / 2), 'blue'))
-    # колонна-стек
-    P.append(_p(tf(cyl(0.14, 0.1, 14), t=(0, 0, Z + 0.3)), 'dark'))
-    P.append(_p(tf(cyl(0.11, 0.08, 14), t=(0, 0, Z + 0.39)), 'gold'))
-    P.append(_p(tf(cyl(0.13, 0.06, 14), t=(0, 0, Z + 0.46)), 'silver'))
-    # двойная чаша (открытые, стенка с толщиной)
-    bowl1 = revolve([(0.34, 0.32), (0.1, 0.06), (0.12, 0.0), (0.36, 0.28)],
-                    22, close=False)
-    P.append(_p(tf(bowl1, t=(0, 0, Z + 0.5)), 'glass'))
-    P.append(_p(tf(torus(0.35, 0.022, 22, 7), t=(0, 0, Z + 0.81)), 'silver'))
-    bowl2 = revolve([(0.42, 0.3), (0.13, 0.04), (0.15, -0.02), (0.44, 0.26)],
-                    22, close=False)
-    P.append(_p(tf(bowl2, t=(0, 0, Z + 0.76)), 'glass'))
-    P.append(_p(tf(torus(0.43, 0.025, 22, 7), t=(0, 0, Z + 1.05)), 'silver'))
-    # тёмное дно и вихрь в верхней чаше
-    P.append(_p(tf(cyl(0.13, 0.03, 14), t=(0, 0, Z + 0.81)), 'dark'))
-    path = [(0.3 * math.exp(-t / 6) * math.cos(t),
-             0.3 * math.exp(-t / 6) * math.sin(t),
-             Z + 1.0 - 0.018 * t) for t in np.linspace(0, 10, 34)]
-    P.append(_p(tube(np.array(path), 0.014, 6), 'bglow'))
-    P.append(_p(tf(sphere(0.045, 8, 6), t=(0, 0, Z + 0.86)), 'bglow'))
-    # боковые капсулы: красные/бирюзовые сердечники в серебре
-    for k, a in enumerate(np.linspace(PI / 6, 2 * PI, 3, endpoint=False)):
-        x, y = 0.62 * math.cos(a), 0.62 * math.sin(a)
-        P.append(_p(tf(tf(cyl(0.09, 0.3, 10), ry=PI / 2), t=(x, y, Z + 0.12),
-                       rz=a), 'silver'))
-        core = 'redline' if k % 2 == 0 else 'teal'
-        P.append(_p(tf(tf(cyl(0.06, 0.34, 8), ry=PI / 2), t=(x, y, Z + 0.12),
-                       rz=a), core))
-        P.append(_p(tf(torus(0.095, 0.015, 10, 5), ry=PI / 2,
-                       t=(x, y, Z + 0.12), rz=a), 'teal'))
-    return merge(P)
+    """Импорт Generator_core_SubatomicScoop_2_model.glb (14822 треуг.):
+    серебристая чаша-воронка на синих опорах, светящиеся цилиндры
+    (эмиссивные ssglow/ssteal — в запечённой текстуре свечение выцвело
+    до салатово-кремового, эмиссия возвращена через MATS). Теги:
+    sssilver/ssblue/ssorange/ssglow/ssteal."""
+    return _load_imported_mesh(_SUBATOMIC_SCOOP_MESH_PATH)
+
+
+_QUARK_EXPRESS_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "quark_express_mesh.npz")
 
 
 def generator_quark_express(seed=0):
-    """Синий хаб с золотым куполом, двойное золотое кольцо и четыре
-    красных светящихся капсулы (реф Generator_QuarkExpress)."""
-    P = []
-    Z = PLATE_TOP
-    # барабан-основание с зелёными катушками по кругу
-    P.append(_p(tf(cyl(0.42, 0.22, 18), t=(0, 0, Z + 0.11)), 'blue'))
-    for a in np.linspace(0, 2 * PI, 12, endpoint=False):
-        P.append(_p(tf(box(0.06, 0.05, 0.1),
-                       t=(0.36 * math.cos(a), 0.36 * math.sin(a), Z + 0.12),
-                       rz=a), 'green'))
-    # двойное золотое кольцо
-    P.append(_p(tf(torus(0.55, 0.035, 24, 8), t=(0, 0, Z + 0.16)), 'gold'))
-    P.append(_p(tf(torus(0.55, 0.03, 24, 8), t=(0, 0, Z + 0.34)), 'gold'))
-    for a in np.linspace(PI / 4, 2 * PI, 4, endpoint=False):
-        P.append(_p(tf(box(0.05, 0.05, 0.2),
-                       t=(0.55 * math.cos(a), 0.55 * math.sin(a), Z + 0.25),
-                       rz=a), 'blue'))
-    # центральный хаб
-    P.append(_p(tf(cyl(0.2, 0.3, 14), t=(0, 0, Z + 0.37)), 'blue'))
-    P.append(_p(tf(dome(0.17, 14, 6), t=(0, 0, Z + 0.52)), 'gold'))
-    # четыре красные капсулы: пара горизонтальных, пара под 45° вверх
-    dirs = [(np.array([1, 0.15, 0.0]), 0.34), (np.array([-1, 0.15, 0.0]), 0.34),
-            (np.array([0.55, 0.15, 0.8]), 0.42),
-            (np.array([-0.55, 0.15, 0.8]), 0.42)]
-    for d, off in dirs:
-        d = d / np.linalg.norm(d)
-        c = np.array([0, 0, Z + 0.42]) + d * off
-        polar = math.acos(d[2])
-        yaw = math.atan2(d[1], d[0])
-        P.append(_p(tf(tf(cyl(0.105, 0.28, 12), ry=polar, rz=yaw), t=tuple(c)),
-                    'blue'))
-        P.append(_p(tf(tf(cyl(0.085, 0.3, 10), ry=polar, rz=yaw),
-                       t=tuple(c + d * 0.06)), 'redline'))
-        P.append(_p(tf(tf(cyl(0.11, 0.05, 12), ry=polar, rz=yaw),
-                       t=tuple(c + d * 0.2)), 'blue'))
-    # красный блок-упор спереди
-    P.append(_p(tf(box(0.34, 0.14, 0.1), t=(0, 0.42, Z + 0.05)), 'coil'))
-    return merge(P)
+    """Импорт Generator_core_QuarkExpress_2_model.glb (15000 треуг.):
+    стально-синий круглый корпус с золотым кольцом, красные светящиеся
+    цилиндры (эмиссивный qeglow — в текстуре выцвели до розового, цвет
+    возвращён через MATS), зелёные катушки (qegreen). Теги: qeblue/
+    qegold/qegreen/qeglow + dark."""
+    return _load_imported_mesh(_QUARK_EXPRESS_MESH_PATH)
+
+
+_VAN_CREEG_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "van_creeg_mesh.npz")
 
 
 def generator_van_creeg(seed=0):
-    """Стеклянный купол с бирюзовой «звездой» внутри и четыре наклонных
-    стеклянных катушечных ускорителя (реф Generator_VanCreegHypersplicer)."""
-    P = []
-    Z = PLATE_TOP
-    # кольцо-основание и купол
-    P.append(_p(tf(cyl(0.48, 0.1, 20, r2=0.44), t=(0, 0, Z + 0.05)), 'silver'))
-    P.append(_p(tf(dome(0.46, 20, 10), t=(0, 0, Z + 0.1), s=(1, 1, 1.05)),
-                'glass'))
-    # начинка: золотая клетка + звезда
-    P.append(_p(tf(torus(0.3, 0.02, 16, 6), t=(0, 0, Z + 0.16)), 'gold'))
-    P.append(_p(tf(torus(0.2, 0.016, 14, 6), t=(0, 0, Z + 0.34)), 'gold'))
-    P.append(_p(tf(sphere(0.09, 10, 7), t=(0, 0, Z + 0.32)), 'accent'))
-    rng = np.random.default_rng(seed + 9)
-    for _ in range(8):
-        d = rng.normal(size=3)
-        d[2] = abs(d[2]) * 0.7
-        d /= np.linalg.norm(d)
-        tip = np.array([0, 0, Z + 0.32]) + d * rng.uniform(0.16, 0.26)
-        P.append(_p(tube(np.array([(0, 0, Z + 0.32), tip]), 0.012, 5),
-                    'bglow'))
-    # четыре наклонных стеклянных ускорителя по диагоналям
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            d = np.array([sx * 0.62, sy * 0.62, 0.75])
-            d /= np.linalg.norm(d)
-            polar = math.acos(d[2])
-            yaw = math.atan2(d[1], d[0])
-            c = np.array([sx * 0.5, sy * 0.5, Z + 0.32])
-            P.append(_p(tf(tf(cyl(0.095, 0.5, 10), ry=polar, rz=yaw),
-                           t=tuple(c)), 'glass'))
-            P.append(_p(tf(tf(helix_coil(0.055, 0.4, 7, 0.016), ry=polar,
-                              rz=yaw), t=tuple(c)), 'copper'))
-            for f in (-0.24, 0.0, 0.24):
-                P.append(_p(tf(tf(torus(0.1, 0.018, 10, 5), ry=polar, rz=yaw),
-                               t=tuple(c + d * f)), 'silver'))
-            P.append(_p(tf(tf(cyl(0.07, 0.06, 10), ry=polar, rz=yaw),
-                           t=tuple(c + d * 0.29)), 'gold'))
-    # два боковых финированных модуля
-    for sgn in (-1, 1):
-        P.append(_p(tf(tf(cyl(0.08, 0.3, 10), ry=PI / 2),
-                       t=(sgn * 0.3, -0.62, Z + 0.09)), 'coil'))
-        P.append(_p(tf(tf(torus(0.085, 0.015, 10, 5), ry=PI / 2),
-                       t=(sgn * 0.3, -0.62, Z + 0.09)), 'blue'))
-    return merge(P)
+    """Импорт Generator_core_VanCreegHypersplicer_2_model.glb (13576
+    треуг.): стальной корпус-купол (стекло купола в запечённой текстуре
+    читается как сталь), золотой узел, медные торцы трубок (тег copper),
+    циановые проблески ядра (эмиссивный vcglow). Теги: vcsteel/vcgold/
+    vcglow + copper."""
+    return _load_imported_mesh(_VAN_CREEG_MESH_PATH)
+
+
+_NANOTWIRLER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanotwirler_mesh.npz")
 
 
 def generator_nanotwirler(seed=0):
-    """Две стопки золотых гофрированных «бубликов» с красными светящимися
-    оголовками и плазменная трубка спереди (реф Generator_Nanotwirler)."""
-    P = []
-    Z = PLATE_TOP
-    for k, (cx, cy) in enumerate(((-0.35, 0.25), (0.38, 0.05))):
-        # стопка бубликов: золотой + стеклянный со смещением
-        for j, zz in enumerate((0.16, 0.42)):
-            P.append(_p(tf(torus(0.27, 0.115, 18, 9), t=(cx, cy, Z + zz)),
-                        'gold'))
-            P.append(_p(tf(torus(0.27, 0.09, 18, 8),
-                           t=(cx, cy, Z + zz + 0.13)), 'glass'))
-            P.append(_p(tf(helix_coil(0.27, 0.04, 10, 0.012),
-                           t=(cx, cy, Z + zz + 0.13)), 'copper'))
-        # оголовок: красное свечение + тёмные рёбра
-        P.append(_p(tf(cyl(0.09, 0.2, 12), t=(cx, cy, Z + 0.72)), 'redline'))
-        for j in range(3):
-            P.append(_p(tf(torus(0.1, 0.014, 12, 5),
-                           t=(cx, cy, Z + 0.65 + j * 0.06)), 'coil'))
-        P.append(_p(tf(cyl(0.115, 0.07, 14), t=(cx, cy, Z + 0.86)), 'dark'))
-        for a in np.linspace(0, 2 * PI, 10, endpoint=False):
-            P.append(_p(tf(box(0.015, 0.05, 0.07),
-                           t=(cx + 0.11 * math.cos(a), cy + 0.11 * math.sin(a),
-                              Z + 0.86), rz=a), 'dark'))
-        # ножка
-        P.append(_p(tf(cyl(0.16, 0.12, 12), t=(cx, cy, Z + 0.06)), 'silver'))
-    # плазменная трубка на стойках спереди
-    ax = np.array([0.92, 0.38, 0.1])
-    ax /= np.linalg.norm(ax)
-    polar, yaw = math.acos(ax[2]), math.atan2(ax[1], ax[0])
-    c = np.array([-0.05, -0.5, Z + 0.22])
-    P.append(_p(tf(tf(cyl(0.095, 0.6, 12), ry=polar, rz=yaw), t=tuple(c)),
-                'glass'))
-    P.append(_p(tf(tf(cyl(0.05, 0.55, 8), ry=polar, rz=yaw), t=tuple(c)),
-                'bglow'))
-    for f, tag in ((-0.28, 'blue'), (-0.18, 'coil'), (0.18, 'coil'),
-                   (0.28, 'blue')):
-        P.append(_p(tf(tf(torus(0.1, 0.022, 12, 6), ry=polar, rz=yaw),
-                       t=tuple(c + ax * f)), tag))
-    for sgn in (-1, 1):
-        P.append(_p(tf(box(0.05, 0.05, 0.2),
-                       t=tuple(c + ax * sgn * 0.22 - np.array([0, 0, 0.12]))),
-                    'plat'))
-    return merge(P)
+    """Импорт Generator_core_Nanotwirler_2_model.glb (14486 треуг.):
+    серебристая плита с тёмными рёбрами-радиаторами (ntdark), две
+    золотые катушки-тороида, красные светящиеся колпаки (эмиссивный
+    ntred), сине-фиолетовая трубка (эмиссивный ntblue). Теги: ntsilver/
+    ntdark/ntgold/ntred/ntblue."""
+    return _load_imported_mesh(_NANOTWIRLER_MESH_PATH)
 
 
 # ============================================================== SCANNERS

@@ -44,6 +44,7 @@ PALETTE = {
     "hdsilver": ("#BFBCBD", 0), "hdred": ("#A3485E", 0), "hdrose": ("#A88486", 0),
     "nmgun": ("#6E6B70", 0), "nmglow": ("#E29ABD", 1),
     "hsbrass": ("#B69C7F", 0), "hsglow": ("#3C83A4", 1),
+    "plwhite": ("#B9B3B3", 0), "plbronze": ("#85696B", 0), "plglow": ("#D54C3D", 1),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)

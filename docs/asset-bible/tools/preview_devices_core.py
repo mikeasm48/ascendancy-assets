@@ -34,6 +34,7 @@ PALETTE = {
     "gun":    ("#8E969E", 0), "gun_d":  ("#4C545C", 0),
     "copper": ("#B87333", 0), "pearl":  ("#E8DFEA", 0), "yellow": ("#D9C04B", 0),
     "pglow":  ("#E570C0", 1), "yglow":  ("#C6E24A", 1),
+    "tan":    ("#F2DD9B", 0), "redbright": ("#DE211E", 0),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)

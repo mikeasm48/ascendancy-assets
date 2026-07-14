@@ -24,7 +24,7 @@ RECIPES = [
      'engine_ion_banger', 'silver'),
     # -------- star lane drives
     ("StarLaneDrive", "Star Lane Drive", "star_lane_drive",
-     'star_lane_drive', 'silver'),
+     'star_lane_drive', None),
     ("StarLaneDrive_HyperDrive", "Star Lane Hyperdrive", "star_lane_drive",
      'star_lane_hyperdrive', 'silver'),
     # -------- generators

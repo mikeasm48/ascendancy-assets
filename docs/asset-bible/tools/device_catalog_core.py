@@ -19,9 +19,9 @@
 RECIPES = [
     # -------- engines
     ("Engine_TonklinMotor", "Tonklin Motor", "engine",
-     'engine_tonklin_motor', 'silver'),
+     'engine_tonklin_motor', None),
     ("Engine_IonBanger", "Ion Banger", "engine",
-     'engine_ion_banger', 'silver'),
+     'engine_ion_banger', None),
     # -------- star lane drives
     ("StarLaneDrive", "Star Lane Drive", "star_lane_drive",
      'star_lane_drive', None),

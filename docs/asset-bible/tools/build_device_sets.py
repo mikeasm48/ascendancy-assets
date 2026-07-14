@@ -82,6 +82,7 @@ MATS = {
     # device_recipes_core.aux_invasion_module)
     "tan":       ("#F2DD9B", 0.2, 0.55, 0),
     "redbright": ("#DE211E", 0.1, 0.35, 0),
+    "invgray":   ("#8E988E", 0.5, 0.45, 0),
     # --- Colonizer_New (перенос цвета с эталонного референса, см.
     # device_recipes_core.aux_colonizer_new)
     "colgray":   ("#B2B4AC", 0.3, 0.55, 0),

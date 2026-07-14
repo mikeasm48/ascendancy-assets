@@ -34,7 +34,7 @@ PALETTE = {
     "gun":    ("#8E969E", 0), "gun_d":  ("#4C545C", 0),
     "copper": ("#B87333", 0), "pearl":  ("#E8DFEA", 0), "yellow": ("#D9C04B", 0),
     "pglow":  ("#E570C0", 1), "yglow":  ("#C6E24A", 1),
-    "tan":    ("#F2DD9B", 0), "redbright": ("#DE211E", 0),
+    "tan":    ("#F2DD9B", 0), "redbright": ("#DE211E", 0), "invgray": ("#8E988E", 0),
     "colgray": ("#B2B4AC", 0), "colgreen": ("#A8C7A6", 0),
     "coltan": ("#DCC9A4", 0), "colgold": ("#CCB27A", 0),
     "lmgray": ("#BCBEBB", 0), "lmtan": ("#D5C5A0", 0), "lmbrass": ("#998C66", 0),

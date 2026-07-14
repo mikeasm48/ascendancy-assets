@@ -1388,10 +1388,39 @@ def aux_invasion_module(seed=0):
         P.append(_p(tf(tf(torus(0.055, 0.011, 12, 6), ry=PI / 2),
                        t=(tail_x - 0.05, cy + dy, eq_z + 0.02)), 'plat'))
 
-    # --- посадочные опоры (мелкая деталь днища)
-    for ldx, ldy in ((-0.2, -0.14), (-0.2, 0.14), (0.22, 0)):
-        P.append(_p(tf(cyl(0.02, 0.05, 8), t=(cx + ldx, cy + ldy, Z + 0.025)),
-                    'plat'))
+    # --- крылья: небольшие стреловидные плоскости по бокам носовой
+    # половины фюзеляжа (подальше от бомб у кормы), развёрнуты назад
+    wing_root_x = cx + hull_sx * 0.2
+    for sgn in (-1, 1):
+        wing_cy = cy + sgn * (hull_sy * 0.9 + 0.07)
+        P.append(_p(tf(box(0.26, 0.16, 0.02),
+                       t=(wing_root_x - 0.08, wing_cy, eq_z), rz=sgn * 0.2),
+                    'yellow'))
+        P.append(_p(tf(box(0.1, 0.04, 0.026),
+                       t=(wing_root_x, cy + sgn * (hull_sy * 0.9 + 0.01),
+                          eq_z), rz=sgn * 0.05), 'teal'))
+
+    # --- хвостовое оперение: вертикальный киль над кормой, сужается кверху
+    fin_h = 0.22
+    fin_local = loft_z([
+        (0.0, [(-0.09, -0.02), (0.09, -0.02), (0.09, 0.02), (-0.09, 0.02)]),
+        (fin_h, [(-0.02, -0.008), (0.02, -0.008), (0.02, 0.008),
+                (-0.02, 0.008)])])
+    P.append(_p(tf(fin_local, t=(tail_x + 0.08, cy, eq_z)), 'yellow'))
+    P.append(_p(tf(box(0.03, 0.16, 0.16),
+                   t=(tail_x + 0.08, cy, eq_z + 0.08)), 'teal'))
+
+    # --- шасси: 3 стойки (носовая + 2 основных) со стойкой и колесом,
+    # колесо касается плиты, стойка тянется от колеса до брюха фюзеляжа
+    for gx, gy, wr in ((hull_sx * 0.32, 0.0, 0.032),
+                       (-hull_sx * 0.22, -0.15, 0.04),
+                       (-hull_sx * 0.22, 0.15, 0.04)):
+        wheel_z = Z + wr + 0.014
+        strut_h = eq_z - wheel_z
+        P.append(_p(tf(cyl(0.012, strut_h, 8),
+                       t=(cx + gx, cy + gy, wheel_z + strut_h / 2)), 'plat'))
+        P.append(_p(tf(tf(torus(wr, 0.014, 12, 6), rx=PI / 2),
+                       t=(cx + gx, cy + gy, wheel_z)), 'dark'))
 
     # --- рядом с шаттлом (со стороны кормы), параллельно ему: 4 авиабомбы
     # в 2 ряда — сдвинуты в сторону от корпуса по Y (не позади хвоста по X,
@@ -1405,21 +1434,47 @@ def aux_invasion_module(seed=0):
     gap = 0.02
     tail_x = cx - hull_sx * 0.92         # хвост шаттла (для ориентира по X)
     row_x = (tail_x + 0.34, tail_x + 0.34 - 2 * half_len - gap)
-    y_center = cy - hull_sy - 0.16       # параллельно корпусу, в стороне по Y
+    y_center = cy - hull_sy - 0.22       # параллельно корпусу, в стороне по Y
     for rx_ in row_x:
         for sgn in (-1, 1):
             _bomb(P, rx_, y_center + sgn * touch_gap / 2, Z + bomb_r,
                  length=bomb_len, r=bomb_r, nose_to_x=True)
 
-    # --- за бомбами (продолжая тот же параллельный ряд) — поддон доставки;
-    # ширина по Y равна ширине ряда бомб вплотную
-    pallet_len_x, pallet_w_y = 0.08, touch_gap
-    pallet_x = row_x[1] - half_len - gap - pallet_len_x / 2
-    P.append(_p(tf(box(pallet_len_x, pallet_w_y, 0.04),
-                   t=(pallet_x, y_center, Z + 0.02)), 'coil'))
-    P.append(_p(tf(box(pallet_len_x - 0.02, 0.02, 0.045),
-                   t=(pallet_x, y_center + pallet_w_y / 2 - 0.01, Z + 0.04)),
-                'coil2'))
+    # --- поддон доставки: площадь равна площади всей группы из 4 бомб
+    # (2 ряда) — длина и ширина поддона равны длине и ширине занимаемого
+    # бомбами прямоугольника. Такой поддон уже не умещается узкой полосой
+    # у кормы — располагаем его в открытом пространстве ниже бомб (та же
+    # ось X, что и центр группы бомб)
+    bomb_group_len_x = 4 * half_len + gap        # от края до края 2 рядов
+    bomb_group_w_y = touch_gap + 2 * bomb_r      # от внешнего края до края
+    pallet_len_x, pallet_w_y = bomb_group_len_x, bomb_group_w_y
+    pallet_x = (row_x[0] + row_x[1]) / 2
+    pallet_y = (y_center - touch_gap / 2 - bomb_r - 0.05
+               - pallet_w_y / 2)
+    P.append(_p(tf(box(pallet_len_x, pallet_w_y, 0.03),
+                   t=(pallet_x, pallet_y, Z + 0.015)), 'coil'))
+    P.append(_p(tf(box(pallet_len_x - 0.015, pallet_w_y - 0.015, 0.008),
+                   t=(pallet_x, pallet_y, Z + 0.034)), 'coil2'))
+    for sgn in (-1, 1):
+        P.append(_p(tf(box(pallet_len_x - 0.01, 0.01, 0.045),
+                       t=(pallet_x, pallet_y + sgn * (pallet_w_y / 2 - 0.005),
+                          Z + 0.023)), 'dark'))
+
+    # --- рядом с ракетами — несколько ящиков с оружием (компактный
+    # кластер 2x2 под поддоном)
+    crate_y0 = pallet_y - pallet_w_y / 2 - 0.1
+    for ci, (kdx, kdy) in enumerate(((-0.06, 0), (0.06, 0),
+                                     (-0.06, -0.09), (0.06, -0.09))):
+        kx, ky = pallet_x + kdx, crate_y0 + kdy
+        cw, cl, ch = 0.09, 0.065, 0.055
+        P.append(_p(tf(box(cw, cl, ch), t=(kx, ky, Z + ch / 2)), 'dgreen'))
+        P.append(_p(tf(box(cw * 0.92, cl * 0.92, 0.012),
+                       t=(kx, ky, Z + ch + 0.006)), 'graph'))
+        P.append(_p(tf(box(cw * 0.5, 0.012, 0.02),
+                       t=(kx, ky, Z + ch + 0.018)), 'plat'))
+        P.append(_p(tf(box(cw * 0.6, 0.01, ch * 0.4),
+                       t=(kx, ky - cl / 2 + 0.005, Z + ch * 0.55)),
+                    'ygreen'))
     return merge(P)
 
 

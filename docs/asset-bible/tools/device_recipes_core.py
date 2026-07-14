@@ -919,50 +919,25 @@ def weapon_hypersphere_driver(seed=0):
     return merge(P)
 
 
+_NANOMANIPULATOR_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanomanipulator_mesh.npz")
+
+
 def weapon_nanomanipulator(seed=0):
-    """Рупор из стопки серебристых дисков с розовыми светящимися кольцами,
-    серая труба-рукоять и радиаторное основание (реф Weapon_Nanomanipulator).
-    Рупор растёт в +Y вверх."""
-    P = []
-    Z = PLATE_TOP
-    # основание: конус + радиаторные рёбра
-    P.append(_p(tf(cyl(0.4, 0.16, 18, r2=0.28), t=(0, -0.15, Z + 0.08)),
-                'graph'))
-    for k in range(6):
-        P.append(_p(tf(box(0.34, 0.02, 0.1),
-                       t=(0, -0.15 - 0.03 * k, Z + 0.2)), 'dark'))
-    # ось рупора: вперёд-вверх
-    d = np.array([0, 0.55, 0.83])
-    d /= np.linalg.norm(d)
-    polar, yaw = math.acos(d[2]), math.atan2(d[1], d[0])
-    c0 = np.array([0, -0.15, Z + 0.3])
-    # стопка дисков от малого к большому с розовыми кольцами между
-    discs = ((0.09, 0.0), (0.13, 0.14), (0.17, 0.28), (0.22, 0.44),
-             (0.28, 0.62), (0.36, 0.82))
-    for k, (rr, off) in enumerate(discs):
-        cc = c0 + d * off
-        P.append(_p(tf(tf(cyl(rr, 0.06, 16), ry=polar, rz=yaw), t=tuple(cc)),
-                    'silver'))
-        if k:
-            mid = c0 + d * (off - 0.07)
-            P.append(_p(tf(tf(torus(rr * 0.75, 0.02, 14, 6), ry=polar,
-                              rz=yaw), t=tuple(mid)), 'pglow'))
-    # раструб с розовым нутром
-    tip = c0 + d * 0.95
-    P.append(_p(tf(tf(cyl(0.42, 0.05, 18), ry=polar, rz=yaw), t=tuple(tip)),
-                'silver'))
-    P.append(_p(tf(tf(cyl(0.36, 0.02, 16), ry=polar, rz=yaw),
-                   t=tuple(tip + d * 0.02)), 'pglow'))
-    # серая труба-рукоять вокруг
-    path = np.array([(-0.55, -0.35, Z + 0.05), (-0.55, -0.35, Z + 0.7),
-                     (0.0, -0.55, Z + 0.85), (0.55, -0.35, Z + 0.7),
-                     (0.55, -0.35, Z + 0.05)])
-    P.append(_p(tube(path, 0.05, 8), 'plat'))
-    # мех-узлы на рукояти
-    P.append(_p(tf(box(0.14, 0.12, 0.1), t=(0.55, -0.35, Z + 0.4)), 'silver'))
-    P.append(_p(tf(box(0.12, 0.1, 0.09), t=(0.35, -0.5, Z + 0.72), rz=0.5),
-                'silver'))
-    return merge(P)
+    """Заменяет прежнюю процедурную версию (рупор из дисков) — геометрия
+    из низкополигонального референса Weapon_core_Nanomanipulator_2_model.glb
+    (7387 верш./14926 треуг., ~262KB, без цвета; концепт —
+    Weapon_core_Nanomanipulator_2_concept.png: тёмная турель-бур с
+    розовыми светящимися кольцами). Цвет с парной текстурированной модели
+    (та же геометрия 1:1 по положению, топология чуть другая —
+    голосование по 5 ближайшим граням, linear->sRGB). Серые AO-оттенки
+    корпуса слиты в один тег nmgun (урок InvasionModule), розовое
+    свечение — nmglow (эмиссия). Родная плита чистая (8 пар близких
+    параллельных граней) — оставлена. Модель отнормирована до макс.
+    габарита 1.0, дуло развёрнуто в +Y (конвенция оружия). Собственная
+    плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_NANOMANIPULATOR_MESH_PATH)
 
 
 # ================================================================== AUX

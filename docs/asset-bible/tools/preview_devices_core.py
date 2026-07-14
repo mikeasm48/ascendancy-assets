@@ -35,6 +35,8 @@ PALETTE = {
     "copper": ("#B87333", 0), "pearl":  ("#E8DFEA", 0), "yellow": ("#D9C04B", 0),
     "pglow":  ("#E570C0", 1), "yglow":  ("#C6E24A", 1),
     "tan":    ("#F2DD9B", 0), "redbright": ("#DE211E", 0),
+    "colgray": ("#B2B4AC", 0), "colgreen": ("#A8C7A6", 0),
+    "coltan": ("#DCC9A4", 0), "colgold": ("#CCB27A", 0),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)
@@ -85,11 +87,15 @@ def main():
         ax = fig.add_subplot(rows, cols, i + 1, projection='3d',
                              facecolor="#14161a")
         V, F, tags = build(mod, recipe, seed=i)
-        pV, pF, ptags = mod.merge(mod.platform(plate))
-        allV = np.vstack([V, pV])
-        allF = np.vstack([np.asarray(F, int),
-                          np.asarray(pF, int) + len(V)])
-        draw(ax, allV, allF, list(tags) + list(ptags))
+        if plate is not None:
+            pV, pF, ptags = mod.merge(mod.platform(plate))
+            allV = np.vstack([V, pV])
+            allF = np.vstack([np.asarray(F, int),
+                              np.asarray(pF, int) + len(V)])
+            allTags = list(tags) + list(ptags)
+        else:
+            allV, allF, allTags = V, np.asarray(F, int), list(tags)
+        draw(ax, allV, allF, allTags)
         ax.set_title(node, color="#c8cdd2", fontsize=7, pad=0)
     fig.suptitle("CORE devices — v3 (по рефам, без поколений)",
                  color="#e8ecef", fontsize=13, y=0.995)

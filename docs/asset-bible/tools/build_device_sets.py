@@ -82,6 +82,12 @@ MATS = {
     # device_recipes_core.aux_invasion_module)
     "tan":       ("#F2DD9B", 0.2, 0.55, 0),
     "redbright": ("#DE211E", 0.1, 0.35, 0),
+    # --- Colonizer_New (перенос цвета с эталонного референса, см.
+    # device_recipes_core.aux_colonizer_new)
+    "colgray":   ("#B2B4AC", 0.3, 0.55, 0),
+    "colgreen":  ("#A8C7A6", 0.2, 0.55, 0),
+    "coltan":    ("#DCC9A4", 0.2, 0.55, 0),
+    "colgold":   ("#CCB27A", 0.3, 0.45, 0),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)
@@ -219,15 +225,16 @@ def build_race_core(module, coll, mats):
         obj["display_name"] = disp
         obj["device_type"] = dtype
         objs.append(obj)
-        pV, pF, ptags = module.merge(module.platform(plate))
-        pmesh = mesh_from_parts(f"PLT_core_{node}", pV, pF, ptags, mats,
-                                smooth=False)
-        pobj = bpy.data.objects.new(f"{node}_platform", pmesh)
-        coll.objects.link(pobj)
-        pobj.parent = obj
-        pobj["device_id"] = node
-        pobj["part"] = "platform"
-        objs.append(pobj)
+        if plate is not None:
+            pV, pF, ptags = module.merge(module.platform(plate))
+            pmesh = mesh_from_parts(f"PLT_core_{node}", pV, pF, ptags, mats,
+                                    smooth=False)
+            pobj = bpy.data.objects.new(f"{node}_platform", pmesh)
+            coll.objects.link(pobj)
+            pobj.parent = obj
+            pobj["device_id"] = node
+            pobj["part"] = "platform"
+            objs.append(pobj)
     return objs
 
 

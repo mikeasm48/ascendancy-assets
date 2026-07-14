@@ -8,7 +8,9 @@
 #
 # Имя узла в GLB = node (формат <Тип>_<Название>). Платформа-постамент —
 # отдельный child-меш <node>_platform (в игре можно скрыть); вид плиты
-# задаёт поле plate (см. device_recipes_core.platform).
+# задаёт поле plate (см. device_recipes_core.platform). plate=None — для
+# устройств с геометрией из готового импортированного референса, у
+# которых собственная плита уже часть меша: общая плита не строится.
 #
 # ПОРЯДОК ЗАПИСЕЙ = индекс узла в GLB. Существующий порядок не менять,
 # новые записи только добавлять в конец.
@@ -69,9 +71,11 @@ RECIPES = [
     ("Aux_Colonizer", "Colonizer", "aux",
      'aux_colonizer', 'silver'),
     ("Aux_InvasionModule", "Invasion Module", "aux",
-     'aux_invasion_module', 'circuit'),
+     'aux_invasion_module', None),
     ("Aux_LaneMagnetron", "Lane Magnetron", "aux",
      'aux_lane_magnetron', 'dark'),
+    ("Aux_Colonizer_New", "Colonizer (New)", "aux",
+     'aux_colonizer_new', None),
 ]
 
 

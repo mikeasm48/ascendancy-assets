@@ -1311,9 +1311,10 @@ def aux_invasion_module(seed=0):
     half = 0.85
 
     # --- фюзеляж: вытянутый приплюснутый эллипсоид (нос смотрит в +X)
-    hull_sx, hull_sy = 0.4, 0.24
+    half = 0.85
+    hull_sx, hull_sy = 0.52, 0.22
     top_sz, bot_sz = 0.15, 0.05
-    cx, cy = 0.35, 0.1
+    cx, cy = half - 0.03 - hull_sx, 0.1   # нос заподлицо с гранью b (справа)
     eq_z = Z + bot_sz + 0.01           # уровень «экватора» (шва) корпуса
 
     def top_z(dx, dy):
@@ -1391,25 +1392,32 @@ def aux_invasion_module(seed=0):
         P.append(_p(tf(cyl(0.02, 0.05, 8), t=(cx + ldx, cy + ldy, Z + 0.025)),
                     'plat'))
 
-    # --- слева от шаттла: 4 авиабомбы в 2 ряда, бомбы внутри ряда
+    # --- рядом с шаттлом, слева: 4 авиабомбы в 2 ряда (компактно, чтобы
+    # уместиться между хвостом шаттла и гранью d), бомбы внутри ряда
     # сдвинуты вплотную (носом к шаттлу, +X)
-    bomb_r = 0.045
+    bomb_r = 0.028
+    bomb_len = 0.2
     fin_span = bomb_r * 3.4
-    touch_gap = fin_span + 0.006        # почти впритык, без пересечения рёбер
-    row_x = (-0.2, -0.52)               # 2 ряда: ближе к шаттлу и дальше
+    touch_gap = fin_span + 0.005        # почти впритык, без пересечения рёбер
+    half_len = bomb_len * 0.62 / 2 + bomb_r + 0.01   # половина длины бомбы
+    gap = 0.04
+    tail_x = cx - hull_sx * 0.92         # хвост шаттла (крайняя левая точка)
+    row_x0 = tail_x - 0.06 - half_len
+    row_x1 = row_x0 - 2 * half_len - gap
+    row_x = (row_x0, row_x1)
     y_center = 0.1
     for rx_ in row_x:
         for sgn in (-1, 1):
             _bomb(P, rx_, y_center + sgn * touch_gap / 2, Z + bomb_r,
-                 length=0.32, r=bomb_r, nose_to_x=True)
+                 length=bomb_len, r=bomb_r, nose_to_x=True)
 
     # --- за бомбами (ещё левее) — поддон доставки; ширина по Y равна
     # ширине ряда бомб вплотную
-    pallet_x = row_x[1] - 0.22
-    pallet_len_x, pallet_w_y = 0.2, touch_gap
+    pallet_len_x, pallet_w_y = 0.1, touch_gap
+    pallet_x = row_x1 - half_len - gap - pallet_len_x / 2
     P.append(_p(tf(box(pallet_len_x, pallet_w_y, 0.04),
                    t=(pallet_x, y_center, Z + 0.02)), 'coil'))
-    P.append(_p(tf(box(pallet_len_x - 0.04, 0.02, 0.045),
+    P.append(_p(tf(box(pallet_len_x - 0.02, 0.02, 0.045),
                    t=(pallet_x, y_center + pallet_w_y / 2 - 0.01, Z + 0.04)),
                 'coil2'))
     return merge(P)

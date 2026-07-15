@@ -12,11 +12,15 @@
 #
 # Выход per race:
 #   humans -> <assets-dir>/humans/devices/device_constructor.glb
+#             (device_catalog.RECIPES: 36 устройств с tech_level)
 #   core   -> <assets-dir>/core/devices/device_constructor.glb
-#             (платформа у core — отдельный child-меш <id>_platform,
-#              в игре её можно скрыть)
+#             (device_catalog_core.RECIPES: 25 моделей по рефам
+#              refs/devices/core БЕЗ уровней/поколений; имя узла =
+#              <Тип>_<Название>; платформа — отдельный child-меш
+#              <node>_platform, в игре её можно скрыть)
 #
-# Каждый объект несёт glTF-extras: device_id, display_name, tech_level.
+# Extras: humans — device_id, display_name, tech_level;
+#         core   — device_id (= имя узла), display_name, device_type.
 
 import os
 import sys
@@ -31,6 +35,8 @@ if HERE not in sys.path:
 import device_recipes_humans
 import device_recipes_core
 from device_catalog import RECIPES, build
+from device_catalog_core import RECIPES as RECIPES_CORE
+from device_catalog_core import build as build_core
 
 RACE_MODULES = {"humans": device_recipes_humans, "core": device_recipes_core}
 RACE_FOLDERS = {"humans": "humans", "core": "core"}
@@ -66,6 +72,136 @@ MATS = {
     "bglow":   ("#4FC3FF", 0.0, 0.40, 4.0),
     "gun":     ("#8E969E", 0.85, 0.35, 0),
     "gun_d":   ("#4C545C", 0.7, 0.40, 0),
+    # --- дополнения core v3 (по обновлённым рефам refs/devices/core)
+    "copper":  ("#B87333", 0.9, 0.30, 0),
+    "pearl":   ("#E8DFEA", 0.4, 0.15, 0),
+    "yellow":  ("#D9C04B", 0.3, 0.50, 0),
+    "pglow":   ("#E570C0", 0.0, 0.40, 3.0),
+    "yglow":   ("#C6E24A", 0.0, 0.40, 3.0),
+    # --- InvasionModule (перенос цвета с эталонного референса, см.
+    # device_recipes_core.aux_invasion_module)
+    "tan":       ("#F2DD9B", 0.2, 0.55, 0),
+    "redbright": ("#DE211E", 0.1, 0.35, 0),
+    "invgray":   ("#8E988E", 0.5, 0.45, 0),
+    # --- Colonizer_New (перенос цвета с эталонного референса, см.
+    # device_recipes_core.aux_colonizer_new)
+    "colgray":   ("#B2B4AC", 0.3, 0.55, 0),
+    "colgreen":  ("#A8C7A6", 0.2, 0.55, 0),
+    "coltan":    ("#DCC9A4", 0.2, 0.55, 0),
+    "colgold":   ("#CCB27A", 0.3, 0.45, 0),
+    # --- LaneMagnetron (перенос цвета с эталонного референса, см.
+    # device_recipes_core.aux_lane_magnetron)
+    "lmgray":    ("#BCBEBB", 0.6, 0.40, 0),
+    "lmtan":     ("#D5C5A0", 0.2, 0.55, 0),
+    "lmbrass":   ("#998C66", 0.7, 0.35, 0),
+    "lmteal":    ("#3689A4", 0.5, 0.35, 0),
+    "lmglow":    ("#F2F470", 0.0, 0.40, 3.0),
+    "lmgreen":   ("#7CA379", 0.3, 0.50, 0),
+    # --- StarLaneDrive (перенос цвета с эталонного референса, см.
+    # device_recipes_core.star_lane_drive)
+    "sldwhite":  ("#ECE7E6", 0.3, 0.45, 0),
+    "sldgray":   ("#BCBDBB", 0.5, 0.40, 0),
+    "sldpeach":  ("#F7DCCF", 0.2, 0.55, 0),
+    "sldblue":   ("#94B3C9", 0.4, 0.40, 0),
+    "sldnavy":   ("#084C7E", 0.4, 0.35, 0),
+    # --- StarLaneDrive_HyperDrive (перенос цвета с эталонного референса,
+    # см. device_recipes_core.star_lane_hyperdrive)
+    "hdsilver":  ("#BFBCBD", 0.8, 0.35, 0),
+    "hdred":     ("#A3485E", 0.3, 0.50, 0),
+    "hdrose":    ("#A88486", 0.3, 0.55, 0),
+    # --- Nanomanipulator (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_nanomanipulator)
+    "nmgun":     ("#6E6B70", 0.85, 0.40, 0),
+    "nmglow":    ("#E29ABD", 0.0, 0.40, 2.5),
+    # --- HypersphereDriver (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_hypersphere_driver; корпус — общий nmgun)
+    "hsbrass":   ("#B69C7F", 0.9, 0.30, 0),
+    "hsglow":    ("#3C83A4", 0.0, 0.40, 2.5),
+    # --- Plasmatron (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_plasmatron)
+    "plwhite":   ("#B9B3B3", 0.3, 0.40, 0),
+    "plbronze":  ("#85696B", 0.8, 0.35, 0),
+    "plglow":    ("#D54C3D", 0.0, 0.40, 3.0),
+    # --- Ueberlaser (перенос цвета с эталонного референса, см.
+    # device_recipes_core.weapon_ueberlaser)
+    "ubsilver":  ("#A4A4A4", 0.8, 0.35, 0),
+    "ubyellow":  ("#DBCD71", 0.3, 0.50, 0),
+    "ubgreen":   ("#99BE79", 0.3, 0.50, 0),
+    "ubglow":    ("#95C9C8", 0.0, 0.40, 2.5),
+    # --- IonBanger (перенос цвета с эталонного референса, см.
+    # device_recipes_core.engine_ion_banger)
+    "ibsilver":  ("#A8A2A4", 0.7, 0.40, 0),
+    "ibred":     ("#B05052", 0.3, 0.45, 0),
+    "ibyellow":  ("#E9D176", 0.3, 0.50, 0),
+    "ibglow":    ("#7AA5C4", 0.0, 0.40, 2.5),
+    # --- TonklinMotor (перенос цвета с эталонного референса, см.
+    # device_recipes_core.engine_tonklin_motor)
+    "tmsteel":   ("#98908B", 0.8, 0.45, 0),
+    "tmred":     ("#9A4348", 0.4, 0.45, 0),
+    # --- генераторы (перенос цвета с эталонных референсов, см.
+    # device_recipes_core.generator_*)
+    "ntsilver":  ("#B2B0AB", 0.7, 0.40, 0),
+    "ntdark":    ("#5A5C56", 0.6, 0.45, 0),
+    "ntgold":    ("#C8B084", 0.9, 0.30, 0),
+    "ntred":     ("#E82C37", 0.0, 0.40, 3.0),
+    "ntblue":    ("#6B90AF", 0.0, 0.40, 2.0),
+    "pssilver":  ("#ABA9A8", 0.7, 0.40, 0),
+    "psblue":    ("#7695A9", 0.5, 0.40, 0),
+    "psbrass":   ("#E0C996", 0.8, 0.35, 0),
+    "pscoil":    ("#AC5038", 0.6, 0.35, 0),
+    "qeblue":    ("#8C9FAD", 0.5, 0.40, 0),
+    "qegold":    ("#C6BC9D", 0.8, 0.35, 0),
+    "qegreen":   ("#57B550", 0.3, 0.45, 0),
+    "qeglow":    ("#DB4B58", 0.0, 0.40, 2.5),
+    "sssilver":  ("#99999A", 0.7, 0.40, 0),
+    "ssblue":    ("#5885A3", 0.5, 0.40, 0),
+    "ssorange":  ("#A8897F", 0.4, 0.50, 0),
+    "ssglow":    ("#E0785F", 0.0, 0.40, 2.0),
+    "ssteal":    ("#5FD9CE", 0.0, 0.40, 2.5),
+    "vcsteel":   ("#AAACAA", 0.8, 0.35, 0),
+    "vcgold":    ("#E4D0A2", 0.9, 0.30, 0),
+    "vcglow":    ("#4F91AE", 0.0, 0.40, 2.5),
+    # --- щиты (перенос цвета с эталонных референсов, см.
+    # device_recipes_core.shield_*)
+    "dtsteel":   ("#888D90", 0.8, 0.35, 0),
+    "dtblue":    ("#3F6FB0", 0.5, 0.40, 0),
+    "dtgold":    ("#C8A24A", 0.9, 0.30, 0),
+    "dtglow":    ("#2EA8E8", 0.0, 0.40, 3.0),
+    "iwcopper":  ("#A2917F", 0.85, 0.35, 0),
+    "iwred":     ("#DB111D", 0.3, 0.35, 0),
+    "iwteal":    ("#8FC0BE", 0.4, 0.45, 0),
+    "wssteel":   ("#8791A0", 0.7, 0.40, 0),
+    "wsblue":    ("#2F4B79", 0.6, 0.40, 0),
+    "wscrystal": ("#E1E6E8", 0.2, 0.20, 0),
+    "wsgreen":   ("#7FB56A", 0.4, 0.45, 0),
+    "wspurple":  ("#7A3E9A", 0.0, 0.40, 2.0),
+    "wsglow":    ("#3AAEE0", 0.0, 0.40, 2.8),
+    # --- Shield_conclusion (перенос цвета с эталонного референса, см.
+    # device_recipes_core.shield_conclusion)
+    "cnsteel":   ("#6E7376", 0.8, 0.40, 0),
+    "cnbubble":  ("#C7D2DE", 0.2, 0.12, 0),
+    "cnteal":    ("#5FA394", 0.3, 0.45, 0),
+    # --- сканеры (перенос цвета с эталонных референсов, см.
+    # device_recipes_core.scanner_*)
+    "tfsteel":   ("#CBC7C3", 0.6, 0.40, 0),
+    "tfbrass":   ("#E0C88A", 0.9, 0.30, 0),
+    "tfred":     ("#B92A38", 0.4, 0.35, 0),
+    "nwsteel":   ("#B3B0B0", 0.7, 0.40, 0),
+    "nwcopper":  ("#B05C4C", 0.8, 0.35, 0),
+    "nwglow":    ("#6B80F4", 0.0, 0.40, 2.8),
+    "nwpurple":  ("#9A2B99", 0.0, 0.40, 2.5),
+    "hwsteel":   ("#9B978E", 0.7, 0.40, 0),
+    "hwbrass":   ("#D9B889", 0.9, 0.30, 0),
+    "hwred":     ("#7E4A38", 0.5, 0.45, 0),
+    "hwdark":    ("#403F38", 0.5, 0.50, 0),
+    "acsteel":   ("#D6DED7", 0.5, 0.35, 0),
+    "acteal":    ("#A9D2C8", 0.3, 0.45, 0),
+    "acgold":    ("#D8CFA0", 0.8, 0.35, 0),
+    "acred":     ("#C93A54", 0.3, 0.35, 0),
+    # --- SubspacePhaseArray (перенос цвета с эталонного референса, см.
+    # device_recipes_core.scanner_subspace_phase_array)
+    "spwhite":   ("#D9D9D4", 0.3, 0.35, 0),
+    "spgold":    ("#DEC98A", 0.9, 0.30, 0),
 }
 
 # рецепты, которым НЕ включаем сглаживание (гекс-щит должен остаться гранёным)
@@ -168,11 +304,10 @@ def build_race(race, mats):
     coll = bpy.data.collections.new(f"COL_devices_{race}")
     bpy.context.scene.collection.children.link(coll)
     objs = []
+    if race == "core":
+        return build_race_core(module, coll, mats)
     for i, (dev_id, disp, recipe, lvl) in enumerate(RECIPES):
-        kw = {}
-        if race == "core":
-            kw["with_platform"] = False  # платформа отдельным мешем ниже
-        V, F, tags = build(module, recipe, lvl, seed=i, **kw)
+        V, F, tags = build(module, recipe, lvl, seed=i)
         smooth = recipe not in FLAT_RECIPES
         mesh = mesh_from_parts(f"DEV_{race}_{dev_id}", V, F, tags, mats, smooth)
         obj = bpy.data.objects.new(f"{i:03d}_{race}_{dev_id}", mesh)
@@ -185,16 +320,33 @@ def build_race(race, mats):
         obj["display_name"] = disp
         obj["tech_level"] = lvl
         objs.append(obj)
-        # платформа core — отдельный child-меш
-        if race == "core":
-            pV, pF, ptags = module.merge(module.platform(1.6, True))
-            pmesh = mesh_from_parts(f"PLT_{race}_{dev_id}", pV, pF, ptags,
-                                    mats, smooth=False)
-            pobj = bpy.data.objects.new(f"{i:03d}_{race}_{dev_id}_platform",
-                                        pmesh)
+    return objs
+
+
+def build_race_core(module, coll, mats):
+    """Core v3: свой каталог (без уровней), имя узла = <Тип>_<Название>,
+    плита-постамент по каталогу — отдельный child-меш <node>_platform."""
+    objs = []
+    for i, (node, disp, dtype, recipe, plate) in enumerate(RECIPES_CORE):
+        V, F, tags = build_core(module, recipe, seed=i)
+        mesh = mesh_from_parts(f"DEV_core_{node}", V, F, tags, mats)
+        obj = bpy.data.objects.new(node, mesh)
+        coll.objects.link(obj)
+        row, col_i = divmod(i, 5)
+        obj.location = (col_i * 3.0, row * 3.0, 0.0)
+        add_edge_split(obj)
+        obj["device_id"] = node
+        obj["display_name"] = disp
+        obj["device_type"] = dtype
+        objs.append(obj)
+        if plate is not None:
+            pV, pF, ptags = module.merge(module.platform(plate))
+            pmesh = mesh_from_parts(f"PLT_core_{node}", pV, pF, ptags, mats,
+                                    smooth=False)
+            pobj = bpy.data.objects.new(f"{node}_platform", pmesh)
             coll.objects.link(pobj)
             pobj.parent = obj
-            pobj["device_id"] = dev_id
+            pobj["device_id"] = node
             pobj["part"] = "platform"
             objs.append(pobj)
     return objs

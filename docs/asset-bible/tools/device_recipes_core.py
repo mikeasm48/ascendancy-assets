@@ -295,41 +295,24 @@ def scanner_tonklin_freq(seed=0):
     return _load_imported_mesh(_TONKLIN_FREQ_MESH_PATH)
 
 
+_SUBSPACE_PHASE_ARRAY_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "subspace_phase_array_mesh.npz")
+
+
 def scanner_subspace_phase_array(seed=0):
-    """Большая белая тарелка с крестовиной на золотом зубчатом основании
-    и три малых тарелки вокруг (реф Scanner_SubspacePhaseArray)."""
-    P = []
-    Z = PLATE_TOP
-    # золотое зубчатое основание
-    P.append(_p(tf(cyl(0.3, 0.14, 16), t=(0, 0, Z + 0.07)), 'gold'))
-    for a in np.linspace(0, 2 * PI, 12, endpoint=False):
-        P.append(_p(tf(box(0.1, 0.07, 0.12),
-                       t=(0.32 * math.cos(a), 0.32 * math.sin(a), Z + 0.07),
-                       rz=a), 'gold'))
-    P.append(_p(tf(cyl(0.09, 0.2, 10), t=(0, 0, Z + 0.24)), 'silver'))
-    # большая тарелка (лицом вверх, чуть к зрителю)
-    d = dish_mesh(0.6, depth=0.3)
-    P.append(_p(tf(d, t=(0, 0, Z + 0.34), rx=-0.22), 'white'))
-    # крестовина-облучатель
-    for a in (0, PI / 2):
-        P.append(_p(tf(tf(cyl(0.012, 0.75, 6), ry=PI / 2), t=(0, 0, Z + 0.52),
-                       rz=a + 0.4, rx=-0.22), 'white'))
-    P.append(_p(tf(cyl(0.02, 0.3, 6), t=(0, -0.05, Z + 0.55), rx=-0.22),
-                'silver'))
-    # золотые пластинчатые веера по бокам
-    for sgn in (-1, 1):
-        for k in range(4):
-            P.append(_p(tf(box(0.36, 0.03, 0.02 + 0.008 * k),
-                           t=(sgn * 0.45, -0.05 + k * 0.07, Z + 0.16)),
-                        'gold'))
-    # три малых тарелки вокруг
-    for a in (PI * 0.78, PI * 1.5, PI * 0.22):
-        x, y = 0.62 * math.cos(a), 0.62 * math.sin(a)
-        P.append(_p(tf(box(0.14, 0.12, 0.14), t=(x, y, Z + 0.07), rz=a),
-                    'plat'))
-        P.append(_p(tf(dish_mesh(0.22, depth=0.28), t=(x, y, Z + 0.2),
-                       rx=-PI / 2.6, rz=a - PI / 2), 'white'))
-    return merge(P)
+    """Импорт Scanner_core_SubspacePhaseArray_2 (10470 треуг.; концепт
+    FARSIGHT SC-2): большая белая тарелка с крестовиной-облучателем и
+    четыре малых тарелки (spwhite) на золотых крестах-облучателях и
+    радиальных плавниках (spgold), на серебристой решётчатой плите.
+    Геометрия и цвет извлечены напрямую из
+    Scanner_core_SubspacePhaseArray_2_texture.glb (отдельного
+    untextured-меша не требуется: конструктор грузит только npz с V/F и
+    тегом материала на грань — тяжёлая текстура в пайплайн не попадает).
+    Вершины по UV-швам сварены (22016->3881), цвет перенесён попиксельно
+    по UV с денойзом по 5 соседям, linear->sRGB. Родная плита чистая —
+    оставлена, каталог plate=None; нормировка до макс. габарита 1.0."""
+    return _load_imported_mesh(_SUBSPACE_PHASE_ARRAY_MESH_PATH)
 
 
 _AURAL_CLOUD_MESH_PATH = os.path.join(

@@ -42,7 +42,7 @@ RECIPES = [
     ("Scanner_TonklinFrequencyAnalizer", "Tonklin Frequency Analizer",
      "scanner", 'scanner_tonklin_freq', None),
     ("Scanner_SubspacePhaseArray", "Subspace Phase Array", "scanner",
-     'scanner_subspace_phase_array', 'lattice'),
+     'scanner_subspace_phase_array', None),
     ("Scanner_AuralCloudConstructor", "Aural Cloud Constructor", "scanner",
      'scanner_aural_cloud', None),
     ("Scanner_HyperwaveTympanum", "Hyperwave Tympanum", "scanner",

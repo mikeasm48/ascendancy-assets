@@ -272,41 +272,27 @@ def generator_nanotwirler(seed=0):
 
 
 # ============================================================== SCANNERS
+#
+# Четыре сканера (tonklin_freq, aural_cloud, hyperwave_tympanum,
+# nanowave_net) заменены импортированными низкополигональными
+# референсами (пары <имя>_2_model.glb + _2_texture.glb, позиции граней
+# 1:1): цвет перенесён голосованием по 5 ближайшим граням текстурного
+# двойника (linear->sRGB), k-means-кластеры сгруппированы в узкие наборы
+# реальных материалов (AO-оттенки слиты); одинокие эмиссивные грани
+# сняты антиспекл-фильтром. Родные плиты чистые — оставлены, каталог
+# plate=None. Модели отнормированы до макс. габарита 1.0.
+# scanner_subspace_phase_array пока процедурный (референс не прислан).
+
+_TONKLIN_FREQ_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "tonklin_freq_mesh.npz")
+
 
 def scanner_tonklin_freq(seed=0):
-    """Латунные петли-«скрепки» с красными катушками на осях и линза в
-    латунной клетке (реф Scanner_TonklinFrequencyAnalizer)."""
-    P = []
-    Z = PLATE_TOP
-    # две серебристые стойки
-    for dy in (-0.12, 0.14):
-        P.append(_p(tf(cyl(0.03, 0.55, 8), t=(0.12, dy, Z + 0.28)), 'silver'))
-    # латунные петли-скрепки (плющеные торы стоймя) на разной высоте
-    loops = [(0.0, 0.0, 0.35, 0.6, 0.0), (-0.05, 0.1, 0.5, 0.75, 0.5),
-             (0.1, -0.1, 0.28, 0.45, -0.4)]
-    for (lx, ly, lz, lw, rzz) in loops:
-        P.append(_p(tf(torus(0.16, 0.028, 16, 7), rx=PI / 2,
-                       t=(lx, ly, Z + lz), rz=rzz, s=(lw / 0.32, 1, 1)),
-                    'coil2'))
-    # красные катушки на латунных осях, радиально в стороны
-    rng = np.random.default_rng(seed + 11)
-    for k, a in enumerate(np.linspace(0, 2 * PI, 8, endpoint=False)):
-        R = 0.42 + 0.08 * (k % 2)
-        x, y = R * math.cos(a), R * math.sin(a)
-        z = Z + 0.2 + 0.18 * (k % 3)
-        body, rims = _spool(0.095, 0.16)
-        P.append(_p(tf(body, ry=PI / 2, t=(x, y, z), rz=a), 'coil2'))
-        P.append(_p(tf(rims, ry=PI / 2, t=(x, y, z), rz=a), 'coil'))
-        P.append(_p(tf(tf(cyl(0.025, 0.08, 6), ry=PI / 2),
-                       t=(x + 0.11 * math.cos(a), y + 0.11 * math.sin(a), z),
-                       rz=a), 'gold'))
-        # ось к центру
-        P.append(_p(tube(np.array([(x * 0.35, y * 0.35, z), (x, y, z)]),
-                         0.022, 6), 'coil2'))
-    # клетка с линзой наверху
-    P.append(_p(tf(cyl(0.1, 0.06, 12), t=(0.12, 0.0, Z + 0.6)), 'coil2'))
-    P.append(_p(tf(dome(0.07, 10, 5), t=(0.12, 0.0, Z + 0.64)), 'glass'))
-    return merge(P)
+    """Импорт Scanner_core_TonklinFrequencyAnalizer_2_model.glb (14590
+    треуг.; концепт NEXUS SC-1): восемь красных катушек (tfred) на
+    латунных П-скобах (tfbrass) с линзой, на серебристой PCB-плите
+    (tfsteel) + тёмные торцы (dark)."""
+    return _load_imported_mesh(_TONKLIN_FREQ_MESH_PATH)
 
 
 def scanner_subspace_phase_array(seed=0):
@@ -346,104 +332,42 @@ def scanner_subspace_phase_array(seed=0):
     return merge(P)
 
 
+_AURAL_CLOUD_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "aural_cloud_mesh.npz")
+
+
 def scanner_aural_cloud(seed=0):
-    """Кольцо наклонных бирюзовых перфотруб вокруг рубиновой «ягоды» на
-    бронзовом конусе, стеклянные песочные колонны (реф AuralCloudConstructor)."""
-    P = []
-    Z = PLATE_TOP
-    # золотое кольцо-обруч
-    P.append(_p(tf(torus(0.5, 0.045, 24, 8), t=(0, 0, Z + 0.3)), 'gold'))
-    # шесть наклонных бирюзовых труб раструбами вверх-наружу
-    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
-        d = np.array([math.cos(a) * 0.55, math.sin(a) * 0.55, 0.8])
-        d /= np.linalg.norm(d)
-        polar, yaw = math.acos(d[2]), math.atan2(d[1], d[0])
-        c = np.array([0.38 * math.cos(a), 0.38 * math.sin(a), Z + 0.32])
-        P.append(_p(tf(tf(cyl(0.15, 0.5, 12), ry=polar, rz=yaw), t=tuple(c)),
-                    'teal'))
-        P.append(_p(tf(tf(torus(0.15, 0.02, 12, 5), ry=polar, rz=yaw),
-                       t=tuple(c + d * 0.25)), 'silver'))
-        P.append(_p(tf(tf(cyl(0.12, 0.02, 12), ry=polar, rz=yaw),
-                       t=tuple(c - d * 0.2)), 'dark'))
-    # бронзовый конус + рубиновая ягода
-    P.append(_p(tf(cyl(0.18, 0.35, 14, r2=0.1), t=(0, 0, Z + 0.4)), 'copper'))
-    P.append(_p(tf(sphere(0.17, 12, 9), t=(0, 0, Z + 0.68)), 'redline'))
-    rng = np.random.default_rng(seed + 13)
-    for _ in range(12):
-        d = rng.normal(size=3)
-        d[2] = abs(d[2])
-        d /= np.linalg.norm(d)
-        P.append(_p(tf(sphere(0.035, 6, 5),
-                       t=tuple(np.array([0, 0, Z + 0.68]) + d * 0.16)),
-                    'coil'))
-    # стеклянные песочные колонны по углам
-    hour = revolve([(0.09, 0.5), (0.1, 0.45), (0.045, 0.25), (0.1, 0.05),
-                    (0.09, 0.0)], 12)
-    for (hx, hy) in ((-0.62, -0.42), (0.62, -0.42), (0.05, -0.68)):
-        P.append(_p(tf(hour, t=(hx, hy, Z)), 'glass'))
-    return merge(P)
+    """Импорт Scanner_core_AuralCloudConstructor_2_model.glb (15544
+    треуг.; концепт PRISMSCAN SC-5): кольцо наклонных бирюзово-мятных
+    перфотруб (acteal) вокруг рубиновой «ягоды» (acred) на золотом
+    PCB-обруче (acgold), стеклянные песочные колонны и серебристая плита
+    (acsteel)."""
+    return _load_imported_mesh(_AURAL_CLOUD_MESH_PATH)
+
+
+_HYPERWAVE_TYMPANUM_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "hyperwave_tympanum_mesh.npz")
 
 
 def scanner_hyperwave_tympanum(seed=0):
-    """Стопка медных торов-«барабанов» и четыре золотых кристалла-лампы
-    на красных стойках (реф Scanner_HyperwaveTympanum)."""
-    P = []
-    Z = PLATE_TOP
-    # барабан: три сплюснутых тора + крышка с воронкой
-    for k, (R, zz) in enumerate(((0.44, 0.14), (0.46, 0.34), (0.42, 0.52))):
-        P.append(_p(tf(torus(R, 0.14, 22, 10), t=(0, 0, Z + zz),
-                       s=(1, 1, 0.75)), 'copper'))
-    P.append(_p(tf(cyl(0.4, 0.05, 20), t=(0, 0, Z + 0.64)), 'copper'))
-    funnel = revolve([(0.28, 0.08), (0.1, 0.02), (0.04, 0.06)], 18)
-    P.append(_p(tf(funnel, t=(0, 0, Z + 0.66)), 'copper'))
-    # центральный кристалл
-    P.append(_p(tf(octahedron(0.09, 1.4), t=(0, 0, Z + 0.84)), 'gold'))
-    # четыре красных стойки с золотыми кристаллами-лампами
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            x, y = sx * 0.58, sy * 0.58
-            P.append(_p(tf(cyl(0.028, 0.62, 8), t=(x, y, Z + 0.31)), 'coil'))
-            P.append(_p(tf(cyl(0.04, 0.04, 8), t=(x, y, Z + 0.62)), 'silver'))
-            P.append(_p(tf(octahedron(0.1, 1.3), t=(x, y, Z + 0.74)), 'gold'))
-            P.append(_p(tf(sphere(0.035, 6, 5), t=(x, y, Z + 0.74)),
-                        'accent'))
-    return merge(P)
+    """Импорт Scanner_core_HyperwaveTympanum_2_model.glb (14114 треуг.;
+    концепт AURUM SC-4): стопка латунно-медных торов-«барабанов»
+    (hwbrass) с золотыми кристаллами-финиалами на тёмно-красных стойках
+    (hwred), тёмная плита (hwdark) + стальные детали (hwsteel)."""
+    return _load_imported_mesh(_HYPERWAVE_TYMPANUM_MESH_PATH)
+
+
+_NANOWAVE_NET_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanowave_net_mesh.npz")
 
 
 def scanner_nanowave_net(seed=0):
-    """Красный обруч-диск с «кружевом» синих колец на паучьих ногах
-    (реф Scanner_NanowaveDecouplingNet)."""
-    P = []
-    Z = PLATE_TOP
-    zc = Z + 0.42
-    # красный обруч
-    P.append(_p(tf(cyl(0.62, 0.1, 28), t=(0, 0, zc)), 'coil'))
-    P.append(_p(tf(cyl(0.56, 0.11, 28), t=(0, 0, zc)), 'copper'))
-    # кружево синих колец: внешнее кольцо из 8 + внутреннее из 5 + центр
-    for R, n, rr in ((0.42, 8, 0.115), (0.22, 5, 0.085)):
-        for a in np.linspace(0, 2 * PI, n, endpoint=False):
-            x, y = R * math.cos(a), R * math.sin(a)
-            P.append(_p(tf(torus(rr, 0.024, 14, 6), t=(x, y, zc + 0.06)),
-                        'blue'))
-            P.append(_p(tf(cyl(rr - 0.02, 0.02, 12), t=(x, y, zc + 0.02)),
-                        'copper'))
-    for a in np.linspace(PI / 8, 2 * PI, 4, endpoint=False):
-        P.append(_p(tf(torus(0.05, 0.014, 10, 5),
-                       t=(0.32 * math.cos(a), 0.32 * math.sin(a), zc + 0.07)),
-                    'pglow'))
-    # серебристая кнопка в центре
-    P.append(_p(tf(cyl(0.09, 0.05, 12), t=(0, 0, zc + 0.07)), 'silver'))
-    P.append(_p(tf(dome(0.05, 10, 4), t=(0, 0, zc + 0.1)), 'silver'))
-    # паучьи ноги-актуаторы
-    for a in np.linspace(PI / 6, 2 * PI, 6, endpoint=False):
-        x1, y1 = 0.52 * math.cos(a), 0.52 * math.sin(a)
-        x0, y0 = 0.66 * math.cos(a), 0.66 * math.sin(a)
-        P.append(_p(tube(np.array([(x0 * 0.9, y0 * 0.9, Z + 0.02),
-                                   (x0, y0, Z + 0.2),
-                                   (x1, y1, zc - 0.06)]), 0.025, 6), 'plat'))
-        P.append(_p(tf(cyl(0.035, 0.12, 8),
-                       t=(x1 * 1.05, y1 * 1.05, zc - 0.16)), 'silver'))
-    return merge(P)
+    """Импорт Scanner_core_NanowaveDecouplingNet_2_model.glb (13966
+    треуг.; концепт PULSAR SC-3): красный анодированный обруч с медным
+    нутром (nwcopper) и кружевом синих неоновых колец (эмиссивный
+    nwglow), пурпурные искры (эмиссивный nwpurple), на серебристой плите
+    с паучьими ногами (nwsteel)."""
+    return _load_imported_mesh(_NANOWAVE_NET_MESH_PATH)
 
 
 # =============================================================== SHIELDS

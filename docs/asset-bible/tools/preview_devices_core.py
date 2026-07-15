@@ -65,6 +65,13 @@ PALETTE = {
     "wssteel": ("#8791A0", 0), "wsblue": ("#2F4B79", 0), "wscrystal": ("#E1E6E8", 0),
     "wsgreen": ("#7FB56A", 0), "wspurple": ("#7A3E9A", 1), "wsglow": ("#3AAEE0", 1),
     "cnsteel": ("#6E7376", 0), "cnbubble": ("#C7D2DE", 0), "cnteal": ("#5FA394", 0),
+    "tfsteel": ("#CBC7C3", 0), "tfbrass": ("#E0C88A", 0), "tfred": ("#B92A38", 0),
+    "nwsteel": ("#B3B0B0", 0), "nwcopper": ("#B05C4C", 0),
+    "nwglow": ("#6B80F4", 1), "nwpurple": ("#9A2B99", 1),
+    "hwsteel": ("#9B978E", 0), "hwbrass": ("#D9B889", 0),
+    "hwred": ("#7E4A38", 0), "hwdark": ("#403F38", 0),
+    "acsteel": ("#D6DED7", 0), "acteal": ("#A9D2C8", 0),
+    "acgold": ("#D8CFA0", 0), "acred": ("#C93A54", 0),
 }
 LIGHT = np.array([0.4, -0.65, 0.65])
 LIGHT_N = LIGHT / np.linalg.norm(LIGHT)

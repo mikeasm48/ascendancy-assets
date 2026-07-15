@@ -51,11 +51,11 @@ RECIPES = [
      'scanner_nanowave_net', 'silver'),
     # -------- shields
     ("Shield_ion_wrap", "Ion Wrap", "shield",
-     'shield_ion_wrap', 'dark'),
+     'shield_ion_wrap', None),
     ("Shield_deactotron", "Deactotron", "shield",
-     'shield_deactotron', 'dark'),
+     'shield_deactotron', None),
     ("Shield_wave_scatterer", "Wave Scatterer", "shield",
-     'shield_wave_scatterer', 'silver'),
+     'shield_wave_scatterer', None),
     ("Shield_conclusion", "Conclusion", "shield",
      'shield_conclusion', 'silver'),
     # -------- weapons

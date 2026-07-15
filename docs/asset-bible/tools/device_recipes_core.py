@@ -447,125 +447,58 @@ def scanner_nanowave_net(seed=0):
 
 
 # =============================================================== SHIELDS
+#
+# Три щита (ion_wrap, deactotron, wave_scatterer) заменены
+# импортированными низкополигональными референсами (пары <имя>_2_model.glb
+# + _2_texture.glb, позиции граней 1:1): цвет перенесён голосованием по
+# 5 ближайшим граням текстурного двойника (linear->sRGB), k-means-кластеры
+# сгруппированы в узкие наборы реальных материалов; одинокие эмиссивные
+# грани сняты антиспекл-фильтром по соседям. Родные плиты чистые —
+# оставлены; каталог plate=None. Модели отнормированы до макс. габарита
+# 1.0. shield_conclusion пока процедурный: присланные для него
+# <...>_2_model/_texture.glb оказались побайтовой копией deactotron_2
+# (тот же MD5) — ждём корректный экспорт эталона.
+
+_ION_WRAP_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "ion_wrap_mesh.npz")
+
 
 def shield_ion_wrap(seed=0):
-    """Плоский медный тор, красная пружина и полосатые обручи в сетчатых
-    зажимах (реф Shield_ion_wrap). Гранёный, без сглаживания."""
-    P = []
-    Z = PLATE_TOP
-    # медный тор
-    P.append(_p(tf(torus(0.45, 0.12, 24, 10), t=(0, 0, Z + 0.14)), 'copper'))
-    # красная пружина-башня в центре
-    P.append(_p(tf(helix_coil(0.16, 0.36, 7, 0.035), t=(0, 0, Z + 0.36)),
-                'coil'))
-    P.append(_p(tf(cyl(0.07, 0.12, 8), t=(0, 0, Z + 0.56)), 'silver'))
-    # четыре сетчатых зажима-седла на торе + два красных обруча между ними
-    clamp_a = (PI * 0.2, PI * 0.8, PI * 1.15, PI * 1.75)
-    for k, a in enumerate(clamp_a):
-        x, y = 0.45 * math.cos(a), 0.45 * math.sin(a)
-        tag = 'teal' if k % 2 == 0 else 'blue'
-        # седло обнимает тор и спускается к плите
-        P.append(_p(tf(loft_z([(Z + 0.02, [(0.17, -0.14), (0.17, 0.14),
-                                           (-0.17, 0.14), (-0.17, -0.14)]),
-                               (Z + 0.3, [(0.13, -0.11), (0.13, 0.11),
-                                          (-0.13, 0.11), (-0.13, -0.11)]),
-                               (Z + 0.5, [(0.075, -0.06), (0.075, 0.06),
-                                          (-0.075, 0.06), (-0.075, -0.06)])]),
-                       t=(x, y, 0), rz=a), tag))
-        P.append(_p(tf(box(0.1, 0.1, 0.06), t=(x, y, Z + 0.53), rz=a),
-                    'green'))
-    # красные обручи: концы входят в оголовки пар зажимов
-    for (a0, a1) in ((clamp_a[0], clamp_a[1]), (clamp_a[2], clamp_a[3])):
-        p0 = (0.45 * math.cos(a0), 0.45 * math.sin(a0), Z + 0.56)
-        p1 = (0.45 * math.cos(a1), 0.45 * math.sin(a1), Z + 0.56)
-        P.append(_p(arc_pipe(p0, p1, (0, 0, 0.42), 0.05, n=20), 'coil'))
-    # тонкие медные провода из тора в центр
-    for a in (0.8, 2.6, 4.4):
-        P.append(_p(arc_pipe((0.4 * math.cos(a), 0.4 * math.sin(a), Z + 0.2),
-                             (0.1 * math.cos(a + 1), 0.1 * math.sin(a + 1),
-                              Z + 0.3), (0, 0, 0.12), 0.012), 'copper'))
-    # чип-коробочка на торе
-    P.append(_p(tf(box(0.1, 0.07, 0.06), t=(-0.44, 0.12, Z + 0.28), rz=0.5),
-                'graph'))
-    return merge(P)
+    """Импорт Shield_core_ion_wrap_2_model.glb (13884 треуг.): медный
+    плоский тор + красная центральная пружина (iwred), сетчатые
+    сине-зелёные седла-зажимы (iwteal), тёмная гекс-плита (dark). Медь
+    в запечённой текстуре сильно десатурирована бликами, поэтому
+    объединена с нейтральным металлом в тег iwcopper (тёплый металлик)."""
+    return _load_imported_mesh(_ION_WRAP_MESH_PATH)
+
+
+_DEACTOTRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "deactotron_mesh.npz")
 
 
 def shield_deactotron(seed=0):
-    """Синий барабан, крест из четырёх медных пик под золотым куполом и
-    чёрные обручи (реф Shield_deactotron). Гранёный."""
-    P = []
-    Z = PLATE_TOP
-    # барабан
-    P.append(_p(tf(cyl(0.5, 0.32, 20), t=(0, 0, Z + 0.16)), 'blue'))
-    P.append(_p(tf(torus(0.5, 0.03, 20, 7), t=(0, 0, Z + 0.32)), 'teal'))
-    for a in np.linspace(0, 2 * PI, 8, endpoint=False):
-        P.append(_p(tf(box(0.12, 0.03, 0.12),
-                       t=(0.48 * math.cos(a), 0.48 * math.sin(a), Z + 0.14),
-                       rz=a), 'bglow'))
-    # ножки-шарики
-    for a in np.linspace(PI / 4, 2 * PI, 4, endpoint=False):
-        P.append(_p(tf(sphere(0.07, 8, 6),
-                       t=(0.38 * math.cos(a), 0.38 * math.sin(a), Z + 0.02)),
-                    'blue'))
-    # крест из медных пик
-    hub = np.array([0, 0, Z + 0.44])
-    for a in np.linspace(PI / 4, 2 * PI, 4, endpoint=False):
-        d = np.array([math.cos(a), math.sin(a), 0.12])
-        d /= np.linalg.norm(d)
-        polar, yaw = math.acos(d[2]), math.atan2(d[1], d[0])
-        c = hub + d * 0.3
-        P.append(_p(tf(tf(cyl(0.06, 0.35, 10, r2=1e-4), ry=polar, rz=yaw),
-                       t=tuple(c + d * 0.1)), 'copper'))
-        P.append(_p(tf(tf(cyl(0.065, 0.16, 10), ry=polar, rz=yaw),
-                       t=tuple(hub + d * 0.16)), 'blue'))
-    P.append(_p(tf(dome(0.14, 14, 6), t=tuple(hub + np.array([0, 0, 0.02]))),
-                'gold'))
-    # чёрные обручи над крестом
-    for a in np.linspace(PI / 4, 2 * PI, 4, endpoint=False):
-        x, y = 0.3 * math.cos(a), 0.3 * math.sin(a)
-        P.append(_p(tf(torus(0.16, 0.022, 14, 6), rx=PI / 2,
-                       t=(x, y, Z + 0.52), rz=a + PI / 2), 'dark'))
-    return merge(P)
+    """Импорт Shield_core_deactotron_2_model.glb (14828 треуг.): синий
+    барабан-корпус (dtblue) в гунметалловой клетке из обручей (dtsteel),
+    латунный крест-пики сверху (dtgold), синее свечение по ободу и линзам
+    (эмиссивный dtglow)."""
+    return _load_imported_mesh(_DEACTOTRON_MESH_PATH)
+
+
+_WAVE_SCATTERER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "wave_scatterer_mesh.npz")
 
 
 def shield_wave_scatterer(seed=0):
-    """Тёмная сфера-клетка с фиолетовыми линзами, утыканная перламутровыми
-    кристаллами, на зелёных трубах-опорах (реф Shield_wave_scatterer).
-    Гранёный."""
-    P = []
-    Z = PLATE_TOP
-    c = np.array([0, 0, Z + 0.52])
-    # сфера-клетка
-    P.append(_p(tf(sphere(0.42, 16, 11), t=tuple(c)), 'graph'))
-    for zz, rr in ((0.18, 0.38), (0.0, 0.42), (-0.18, 0.38)):
-        P.append(_p(tf(torus(rr, 0.03, 20, 6), t=tuple(c + np.array([0, 0,
-                                                                     zz]))),
-                    'dark'))
-    # фиолетовые линзы по экватору
-    for a in np.linspace(0, 2 * PI, 8, endpoint=False):
-        P.append(_p(tf(sphere(0.05, 8, 6),
-                       t=tuple(c + np.array([0.42 * math.cos(a),
-                                             0.42 * math.sin(a), 0.02]))),
-                    'pglow'))
-    # перламутровые кристаллы наружу
-    rng = np.random.default_rng(seed + 17)
-    for _ in range(26):
-        d = rng.normal(size=3)
-        d /= np.linalg.norm(d)
-        if d[2] < -0.55:
-            continue
-        base = c + d * 0.4
-        ln = rng.uniform(0.12, 0.24)
-        polar, yaw = math.acos(d[2]), math.atan2(d[1], d[0])
-        P.append(_p(tf(tf(cyl(0.035, ln, 6, r2=1e-4), ry=polar, rz=yaw),
-                       t=tuple(base + d * ln / 2)), 'pearl'))
-    # зелёные трубы-опоры
-    for a in np.linspace(PI / 4, 2 * PI, 4, endpoint=False):
-        x, y = 0.62 * math.cos(a), 0.62 * math.sin(a)
-        P.append(_p(arc_pipe((x, y, Z + 0.04), tuple(c + np.array(
-            [0.3 * math.cos(a), 0.3 * math.sin(a), -0.2])),
-                             (0, 0, 0.1), 0.075), 'green'))
-    return merge(P)
+    """Импорт Shield_core_wave_scatterer_2_model.glb (15219 треуг.):
+    стально-синий гранёный купол-клетка (wsblue) на серебристой плите
+    (wssteel), утыканный перламутровыми кристаллами (wscrystal), с
+    фиолетовыми линзами-самоцветами (эмиссивный wspurple), циановым
+    свечением ядра (эмиссивный wsglow) и зелёными трубами-опорами
+    (wsgreen). Перенос цвета — прямой попиксельный по UV каждой грани
+    (позиции 1:1) с денойзом по 5 соседям, т.к. фиолет/зелень мелкие и
+    k-means-центроиды их пропускали."""
+    return _load_imported_mesh(_WAVE_SCATTERER_MESH_PATH)
+
 
 
 def shield_conclusion(seed=0):

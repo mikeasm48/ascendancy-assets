@@ -1,326 +1,859 @@
-# Рецепты CORE v2 — «1 в 1» по иконкам Ascendancy 1995.
-# Ориентация: сопла двигателей смотрят на зрителя (-Y+X в изометрии).
+# Рецепты устройств CORE v3 — «настольные приборы» по обновлённым
+# референсам refs/devices/core (стилизация под иконки Ascendancy 1995:
+# каждый гаджет собран на квадратной плите-постаменте).
+#
+# Плита — ОТДЕЛЬНЫЙ child-меш (см. build_device_sets.py): рецепты строят
+# только сам прибор, начиная с высоты PLATE_TOP. Вид плиты задаёт каталог
+# (device_catalog_core.RECIPES, поле plate). Ни уровней, ни поколений:
+# одна модель = один референс. «Лицо» устройства (стволы, дула, раструбы)
+# смотрит в +Y.
 
 from device_meshes import *
-import numpy as np, math
+from building_meshes import dish_mesh, octahedron, loft_z
+import numpy as np, math, os
 PI = math.pi
 
-def _p(vf, tag): return (vf[0], vf[1], tag)
+PLATE_TOP = 0.16
 
-def platform(size=1.6, with_platform=True):
-    if not with_platform: return []
-    return [_p(tf(box(size, size, 0.1), t=(0,0,0.05)), 'plat'),
-            _p(tf(box(size*0.82, size*0.82, 0.07), t=(0,0,0.14)), 'graph')]
 
-def nozzle(pos, direction_rz, r=0.22, tag_body='white'):
-    """Сопло: светлый раструб + тёмное жерло + лопатки + пламя (+Y при rz=PI)."""
+def _p(vf, tag):
+    return (vf[0], vf[1], tag)
+
+
+# --------------------------------------------------------------- платформы
+
+def platform(kind='silver', size=1.7):
+    """Плита-постамент; верх на z=PLATE_TOP."""
     P = []
-    bell = revolve([(0.38*r,0.02),(0.5*r,0.25*r),(0.75*r,0.6*r),(0.98*r,1.05*r),(1.06*r,1.15*r),(0.95*r,1.17*r),(0.7*r,0.64*r),(0.45*r,0.28*r),(0.34*r,0.06)], 20)
-    P.append(_p(tf(bell, t=pos, rx=PI/2, rz=direction_rz), tag_body))
-    P.append(_p(tf(tf(cyl(0.34*r, 0.06*r, 14), t=(0,0,0.03*r)), t=pos, rx=PI/2, rz=direction_rz), 'dark'))
-    for a in np.linspace(0, 2*PI, 8, endpoint=False):
-        blade = tf(box(0.045*r, 0.5*r, 0.4*r), t=(0.42*r*math.cos(a), 0.42*r*math.sin(a), 0.3*r), rz=a)
-        P.append(_p(tf(blade, t=pos, rx=PI/2, rz=direction_rz), 'detail'))
-    flame = revolve([(0.01,0.15*r),(0.42*r,0.65*r),(0.28*r,1.5*r),(0.01,2.6*r)], 12)
-    P.append(_p(tf(flame, t=pos, rx=PI/2, rz=direction_rz), 'flame'))
+    if kind == 'circuit':
+        P.append(_p(tf(box(size, size, 0.08), t=(0, 0, 0.04)), 'plat'))
+        P.append(_p(tf(box(size * 0.94, size * 0.94, 0.06),
+                       t=(0, 0, 0.11)), 'dgreen'))
+        rng = np.random.default_rng(3)
+        for _ in range(8):
+            x, y = rng.uniform(-size * 0.4, size * 0.4, 2)
+            P.append(_p(tf(box(0.06, 0.04, 0.02), t=(x, y, 0.15),
+                           rz=rng.integers(0, 2) * PI / 2), 'gold'))
+    elif kind == 'dark':
+        P.append(_p(tf(box(size, size, 0.1), t=(0, 0, 0.05)), 'graph'))
+        P.append(_p(tf(box(size * 0.92, size * 0.92, 0.06),
+                       t=(0, 0, 0.13)), 'dark'))
+    elif kind == 'fins':
+        P.append(_p(tf(box(size, size, 0.09), t=(0, 0, 0.05)), 'silver'))
+        P.append(_p(tf(box(size * 0.9, size * 0.9, 0.07),
+                       t=(0, 0, 0.125)), 'plat'))
+        for sgn in (-1, 1):
+            for k in range(9):
+                x = -size * 0.42 + k * size * 0.105
+                P.append(_p(tf(box(0.05, 0.1, 0.07),
+                               t=(x, sgn * (size / 2 - 0.02), 0.05)), 'plat'))
+    elif kind == 'lattice':
+        P.append(_p(tf(box(size, size, 0.06), t=(0, 0, 0.03)), 'silver'))
+        for k in range(5):
+            d = -size * 0.4 + k * size * 0.2
+            P.append(_p(tf(box(0.03, size * 0.9, 0.06), t=(d, 0, 0.09)),
+                        'plat'))
+            P.append(_p(tf(box(size * 0.9, 0.03, 0.06), t=(0, d, 0.09)),
+                        'plat'))
+        P.append(_p(tf(box(size * 0.9, size * 0.9, 0.02), t=(0, 0, 0.13)),
+                    'plat'))
+    else:  # silver
+        P.append(_p(tf(box(size, size, 0.09), t=(0, 0, 0.045)), 'silver'))
+        P.append(_p(tf(box(size * 0.92, size * 0.92, 0.07),
+                       t=(0, 0, 0.115)), 'plat'))
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            P.append(_p(tf(cyl(0.025, 0.02, 8),
+                           t=(sx * size * 0.44, sy * size * 0.44, 0.155)),
+                        'detail'))
     return P
 
-# --- ENGINE: Tonklin Motor / Ion Banger / Graviton Projector ---------------
-def engine(level, seed=0, with_platform=True):
-    P = platform(1.7, with_platform)
-    rz = PI  # раструб раскрывается в +Y (на зрителя)
-    n_pipes = 2 + (level >= 2)
-    for i in range(n_pipes):
-        x = (i - (n_pipes-1)/2) * 0.4
-        path = np.array([(x, 0.45, 0.42), (x, 0.1, 0.46), (x, -0.25, 0.55), (x, -0.5, 0.72)])
-        P.append(_p(tube(path, 0.16, 14), 'white'))
-        P.append(_p(tf(sphere(0.19, 14, 8), t=(x, -0.5, 0.74)), 'white'))
-        P += nozzle((x, 0.5, 0.42), rz, r=0.2, tag_body='hull_b')
-    n_coil = 3 + level
-    for i in range(n_coil):
-        y = 0.15 - i * 0.55/n_coil
-        P.append(_p(tf(helix_coil(0.1, 0.44*n_pipes, 6, 0.03), t=(0, y, 0.85), ry=PI/2), 'coil'))
-    P.append(_p(tf(box(0.44*n_pipes, 0.6, 0.07), t=(0, -0.12, 0.72)), 'coil2'))
-    if level >= 2:
-        P.append(_p(tf(helix_coil(0.09, 0.5, 5, 0.028), t=(0.45*(n_pipes-1)/2+0.25, -0.2, 0.6), rx=PI/2.4), 'coil2'))
-    if level >= 3:
-        P.append(_p(tf(sphere(0.15, 14, 8), t=(0, -0.55, 1.0)), 'blue'))
-        P.append(_p(tf(torus(0.2, 0.03, 20, 8), t=(0, -0.55, 1.0), rx=PI/3), 'gold'))
+
+# --------------------------------------------------------------- helpers
+
+def _ycyl(r, h, seg=14, r2=None):
+    """Цилиндр вдоль +Y (ось Z повёрнута в +Y)."""
+    return tf(cyl(r, h, seg, r2=r2), rx=-PI / 2)
+
+
+def _ycone(r, h, seg=12):
+    """Конус остриём в +Y."""
+    return tf(cyl(r, h, seg, r2=1e-4), rx=-PI / 2)
+
+
+def _spool(r=0.09, w=0.14, seg=12, rings=4):
+    """Катушка с намоткой: ось Z. (корпус, кольца намотки списком)."""
+    body = cyl(r * 0.55, w, seg)
+    rims = combine_vf([tf(torus(r, w / (rings * 2.6), seg, 6),
+                          t=(0, 0, -w / 2 + w * (k + 0.5) / rings))
+                       for k in range(rings)])
+    return body, rims
+
+
+def combine_vf(vfs):
+    Vs, Fs, off = [], [], 0
+    for V, F in vfs:
+        Vs.append(np.asarray(V, float))
+        Fs.append(np.asarray(F, int) + off)
+        off += len(V)
+    return np.vstack(Vs), np.vstack(Fs)
+
+
+def _gauge(P, pos, rz=0.0):
+    P.append(_p(tf(tf(cyl(0.06, 0.03, 12), rx=-PI / 2), t=pos, rz=rz),
+                'white'))
+    P.append(_p(tf(tf(torus(0.06, 0.012, 12, 5), rx=-PI / 2), t=pos, rz=rz),
+                'detail'))
+
+
+# ============================================================== ENGINES
+
+_TONKLIN_MOTOR_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "tonklin_motor_mesh.npz")
+
+
+def engine_tonklin_motor(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Engine_core_TonklinMotor_2_model.glb
+    (6730 верш./14261 треуг., ~247KB; концепт —
+    Engine_core_TonklinMotor_2.jpg: обветренный стальной блок-мотор с
+    четырьмя стопками тёмно-красных плоских катушек и латунной трубой на
+    квадратной плите). Цвет с парной текстурированной модели (позиции
+    1:1, топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB) в теги: tmsteel (сталь/плита/труба — патина трубы в
+    запечённой текстуре десатурирована и k-means не отделяет её от
+    стали), tmred (катушки), dark. Родная плита чистая — оставлена.
+    Модель отнормирована до макс. габарита 1.0, развёрнута на 90° для
+    витринного ракурса. Собственная плита уже в меше — общая плита
+    каталога отключена (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_TONKLIN_MOTOR_MESH_PATH)
+
+
+_ION_BANGER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "ion_banger_mesh.npz")
+
+
+def engine_ion_banger(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Engine_core_IonBanger_2_model.glb
+    (7148 верш./14728 треуг., ~257KB; концепт —
+    Engine_core_IonBanger_2.jpg: серебристый корпус-сфера с голубым
+    голо-окном, ряды красных кабельных петель, жёлтые модули-клеммы и
+    голубые светящиеся трубы). Цвет с парной текстурированной модели
+    (позиции 1:1, топология чуть другая — голосование по 5 ближайшим
+    граням, linear->sRGB) в теги: ibsilver (корпус, AO-оттенки слиты),
+    ibred (кабели), ibyellow (модули), эмиссивный ibglow (трубы/линза).
+    Родная плита чистая — оставлена. Модель отнормирована до макс.
+    габарита 1.0, развёрнута на 90° для витринного ракурса. Собственная
+    плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_ION_BANGER_MESH_PATH)
+
+
+# ====================================================== STAR LANE DRIVES
+
+_STAR_LANE_DRIVE_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "star_lane_drive_mesh.npz")
+
+
+def star_lane_drive(seed=0):
+    """Заменяет прежнюю процедурную версию («крендель» из торов) —
+    геометрия из низкополигонального референса StarLaneDrive_core_2.glb
+    (8396 верш./15812 треуг., ~284KB, без цвета). Цвет перенесён с
+    StarLaneDrive_core_2_texture.glb — та же геометрия с UV+текстурой
+    (масштаб ~2.008, грани совпадают 1:1: медианное расхождение центров
+    ~3e-7), поэтому каждая грань раскрашена напрямую по своему UV-сэмплу
+    (linear->sRGB). Теги — k-means-группы реальных цветов модели:
+    sldwhite/sldgray/sldpeach/sldblue/sldnavy + dark. Родная плита
+    референса вырезана по связным компонентам и заменена чистым
+    двухступенчатым боксом (белый верх, серая ступень снизу) — как у
+    InvasionModule, во избежание z-fighting. Собственная плита уже в
+    меше — общая плита каталога отключена (device_catalog_core.RECIPES,
+    plate=None)."""
+    return _load_imported_mesh(_STAR_LANE_DRIVE_MESH_PATH)
+
+
+_STAR_LANE_HYPERDRIVE_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "star_lane_hyperdrive_mesh.npz")
+
+
+def star_lane_hyperdrive(seed=0):
+    """Заменяет прежнюю процедурную версию (спираль гофрошлангов) —
+    геометрия из низкополигонального референса
+    StarLaneDrive_core_HyperDrive_2.glb (7153 верш./14674 треуг., ~257KB,
+    без цвета). Цвет с StarLaneDrive_core_HyperDrive_2_texture.glb (та же
+    модель, топология близкая, но не 1:1 — 15193 граней; медианное
+    расхождение центров ~0.0014, перенос голосованием по 5 ближайшим).
+    Теги — k-means-группы: hdsilver (гофрошланги/корпус), hdred
+    (малиновые модули), hdrose (потёртые панели), dark (кабели). Меш был
+    единой связной компонентой, поэтому родная плита отрезана по
+    плоскости (все вершины грани ниже верха плиты), вместо неё чистый
+    двухступенчатый бокс, верх заподлицо с линией среза. Модель
+    отнормирована до макс. габарита 1.0 (в исходнике была ~1.9).
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_STAR_LANE_HYPERDRIVE_MESH_PATH)
+
+
+# ============================================================ GENERATORS
+#
+# Все пять генераторов заменены импортированными низкополигональными
+# референсами (пары <имя>_2_model.glb + _2_texture.glb, позиции граней
+# 1:1): цвет перенесён голосованием по 5 ближайшим граням текстурного
+# двойника (сэмпл текстуры по UV-центру грани, linear->sRGB), затем
+# k-means-кластеры сгруппированы в узкие наборы реальных материалов
+# модели (AO-оттенки одного материала слиты, урок InvasionModule).
+# Одинокие эмиссивные грани сняты фильтром по соседям (антиспекл).
+# Родные плиты чистые — оставлены; общая плита каталога отключена
+# (plate=None). Модели отнормированы до макс. габарита 1.0.
+
+_PROTON_SHAVER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "proton_shaver_mesh.npz")
+
+
+def generator_proton_shaver(seed=0):
+    """Импорт Generator_core_ProtonShaver_2_model.glb (14776 треуг.):
+    серебристая плита, синие башни-цилиндры с медно-красными обмотками
+    (pscoil), латунная обвязка (psbrass). Теги: pssilver/psblue/
+    psbrass/pscoil."""
+    return _load_imported_mesh(_PROTON_SHAVER_MESH_PATH)
+
+
+_SUBATOMIC_SCOOP_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "subatomic_scoop_mesh.npz")
+
+
+def generator_subatomic_scoop(seed=0):
+    """Импорт Generator_core_SubatomicScoop_2_model.glb (14822 треуг.):
+    серебристая чаша-воронка на синих опорах, светящиеся цилиндры
+    (эмиссивные ssglow/ssteal — в запечённой текстуре свечение выцвело
+    до салатово-кремового, эмиссия возвращена через MATS). Теги:
+    sssilver/ssblue/ssorange/ssglow/ssteal."""
+    return _load_imported_mesh(_SUBATOMIC_SCOOP_MESH_PATH)
+
+
+_QUARK_EXPRESS_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "quark_express_mesh.npz")
+
+
+def generator_quark_express(seed=0):
+    """Импорт Generator_core_QuarkExpress_2_model.glb (15000 треуг.):
+    стально-синий круглый корпус с золотым кольцом, красные светящиеся
+    цилиндры (эмиссивный qeglow — в текстуре выцвели до розового, цвет
+    возвращён через MATS), зелёные катушки (qegreen). Теги: qeblue/
+    qegold/qegreen/qeglow + dark."""
+    return _load_imported_mesh(_QUARK_EXPRESS_MESH_PATH)
+
+
+_VAN_CREEG_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "van_creeg_mesh.npz")
+
+
+def generator_van_creeg(seed=0):
+    """Импорт Generator_core_VanCreegHypersplicer_2_model.glb (13576
+    треуг.): стальной корпус-купол (стекло купола в запечённой текстуре
+    читается как сталь), золотой узел, медные торцы трубок (тег copper),
+    циановые проблески ядра (эмиссивный vcglow). Теги: vcsteel/vcgold/
+    vcglow + copper."""
+    return _load_imported_mesh(_VAN_CREEG_MESH_PATH)
+
+
+_NANOTWIRLER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanotwirler_mesh.npz")
+
+
+def generator_nanotwirler(seed=0):
+    """Импорт Generator_core_Nanotwirler_2_model.glb (14486 треуг.):
+    серебристая плита с тёмными рёбрами-радиаторами (ntdark), две
+    золотые катушки-тороида, красные светящиеся колпаки (эмиссивный
+    ntred), сине-фиолетовая трубка (эмиссивный ntblue). Теги: ntsilver/
+    ntdark/ntgold/ntred/ntblue."""
+    return _load_imported_mesh(_NANOTWIRLER_MESH_PATH)
+
+
+# ============================================================== SCANNERS
+#
+# Четыре сканера (tonklin_freq, aural_cloud, hyperwave_tympanum,
+# nanowave_net) заменены импортированными низкополигональными
+# референсами (пары <имя>_2_model.glb + _2_texture.glb, позиции граней
+# 1:1): цвет перенесён голосованием по 5 ближайшим граням текстурного
+# двойника (linear->sRGB), k-means-кластеры сгруппированы в узкие наборы
+# реальных материалов (AO-оттенки слиты); одинокие эмиссивные грани
+# сняты антиспекл-фильтром. Родные плиты чистые — оставлены, каталог
+# plate=None. Модели отнормированы до макс. габарита 1.0.
+# scanner_subspace_phase_array пока процедурный (референс не прислан).
+
+_TONKLIN_FREQ_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "tonklin_freq_mesh.npz")
+
+
+def scanner_tonklin_freq(seed=0):
+    """Импорт Scanner_core_TonklinFrequencyAnalizer_2_model.glb (14590
+    треуг.; концепт NEXUS SC-1): восемь красных катушек (tfred) на
+    латунных П-скобах (tfbrass) с линзой, на серебристой PCB-плите
+    (tfsteel) + тёмные торцы (dark)."""
+    return _load_imported_mesh(_TONKLIN_FREQ_MESH_PATH)
+
+
+_SUBSPACE_PHASE_ARRAY_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "subspace_phase_array_mesh.npz")
+
+
+def scanner_subspace_phase_array(seed=0):
+    """Импорт Scanner_core_SubspacePhaseArray_2 (10470 треуг.; концепт
+    FARSIGHT SC-2): большая белая тарелка с крестовиной-облучателем и
+    четыре малых тарелки (spwhite) на золотых крестах-облучателях и
+    радиальных плавниках (spgold), на серебристой решётчатой плите.
+    Геометрия и цвет извлечены напрямую из
+    Scanner_core_SubspacePhaseArray_2_texture.glb (отдельного
+    untextured-меша не требуется: конструктор грузит только npz с V/F и
+    тегом материала на грань — тяжёлая текстура в пайплайн не попадает).
+    Вершины по UV-швам сварены (22016->3881), цвет перенесён попиксельно
+    по UV с денойзом по 5 соседям, linear->sRGB. Родная плита чистая —
+    оставлена, каталог plate=None; нормировка до макс. габарита 1.0."""
+    return _load_imported_mesh(_SUBSPACE_PHASE_ARRAY_MESH_PATH)
+
+
+_AURAL_CLOUD_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "aural_cloud_mesh.npz")
+
+
+def scanner_aural_cloud(seed=0):
+    """Импорт Scanner_core_AuralCloudConstructor_2_model.glb (15544
+    треуг.; концепт PRISMSCAN SC-5): кольцо наклонных бирюзово-мятных
+    перфотруб (acteal) вокруг рубиновой «ягоды» (acred) на золотом
+    PCB-обруче (acgold), стеклянные песочные колонны и серебристая плита
+    (acsteel)."""
+    return _load_imported_mesh(_AURAL_CLOUD_MESH_PATH)
+
+
+_HYPERWAVE_TYMPANUM_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "hyperwave_tympanum_mesh.npz")
+
+
+def scanner_hyperwave_tympanum(seed=0):
+    """Импорт Scanner_core_HyperwaveTympanum_2_model.glb (14114 треуг.;
+    концепт AURUM SC-4): стопка латунно-медных торов-«барабанов»
+    (hwbrass) с золотыми кристаллами-финиалами на тёмно-красных стойках
+    (hwred), тёмная плита (hwdark) + стальные детали (hwsteel)."""
+    return _load_imported_mesh(_HYPERWAVE_TYMPANUM_MESH_PATH)
+
+
+_NANOWAVE_NET_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanowave_net_mesh.npz")
+
+
+def scanner_nanowave_net(seed=0):
+    """Импорт Scanner_core_NanowaveDecouplingNet_2_model.glb (13966
+    треуг.; концепт PULSAR SC-3): красный анодированный обруч с медным
+    нутром (nwcopper) и кружевом синих неоновых колец (эмиссивный
+    nwglow), пурпурные искры (эмиссивный nwpurple), на серебристой плите
+    с паучьими ногами (nwsteel)."""
+    return _load_imported_mesh(_NANOWAVE_NET_MESH_PATH)
+
+
+# =============================================================== SHIELDS
+#
+# Три щита (ion_wrap, deactotron, wave_scatterer) заменены
+# импортированными низкополигональными референсами (пары <имя>_2_model.glb
+# + _2_texture.glb, позиции граней 1:1): цвет перенесён голосованием по
+# 5 ближайшим граням текстурного двойника (linear->sRGB), k-means-кластеры
+# сгруппированы в узкие наборы реальных материалов; одинокие эмиссивные
+# грани сняты антиспекл-фильтром по соседям. Родные плиты чистые —
+# оставлены; каталог plate=None. Модели отнормированы до макс. габарита
+# 1.0. shield_conclusion пока процедурный: присланные для него
+# <...>_2_model/_texture.glb оказались побайтовой копией deactotron_2
+# (тот же MD5) — ждём корректный экспорт эталона.
+
+_ION_WRAP_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "ion_wrap_mesh.npz")
+
+
+def shield_ion_wrap(seed=0):
+    """Импорт Shield_core_ion_wrap_2_model.glb (13884 треуг.): медный
+    плоский тор + красная центральная пружина (iwred), сетчатые
+    сине-зелёные седла-зажимы (iwteal), тёмная гекс-плита (dark). Медь
+    в запечённой текстуре сильно десатурирована бликами, поэтому
+    объединена с нейтральным металлом в тег iwcopper (тёплый металлик)."""
+    return _load_imported_mesh(_ION_WRAP_MESH_PATH)
+
+
+_DEACTOTRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "deactotron_mesh.npz")
+
+
+def shield_deactotron(seed=0):
+    """Импорт Shield_core_deactotron_2_model.glb (14828 треуг.): синий
+    барабан-корпус (dtblue) в гунметалловой клетке из обручей (dtsteel),
+    латунный крест-пики сверху (dtgold), синее свечение по ободу и линзам
+    (эмиссивный dtglow)."""
+    return _load_imported_mesh(_DEACTOTRON_MESH_PATH)
+
+
+_WAVE_SCATTERER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "wave_scatterer_mesh.npz")
+
+
+def shield_wave_scatterer(seed=0):
+    """Импорт Shield_core_wave_scatterer_2_model.glb (15219 треуг.):
+    стально-синий гранёный купол-клетка (wsblue) на серебристой плите
+    (wssteel), утыканный перламутровыми кристаллами (wscrystal), с
+    фиолетовыми линзами-самоцветами (эмиссивный wspurple), циановым
+    свечением ядра (эмиссивный wsglow) и зелёными трубами-опорами
+    (wsgreen). Перенос цвета — прямой попиксельный по UV каждой грани
+    (позиции 1:1) с денойзом по 5 соседям, т.к. фиолет/зелень мелкие и
+    k-means-центроиды их пропускали."""
+    return _load_imported_mesh(_WAVE_SCATTERER_MESH_PATH)
+
+
+
+_CONCLUSION_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "conclusion_mesh.npz")
+
+
+def shield_conclusion(seed=0):
+    """Импорт Shield_core_conclusion_2_model.glb (15368 треуг.; концепт
+    PRISMGUARD PG-3): центральное «яйцо»-купол и четыре угловые тумбы,
+    увенчанные перламутрово-иридесцентными пузырями (cnbubble — в плоском
+    материале иридесценция передаётся как бледный глянцевый перламутр),
+    в гунметалловой оправе (cnsteel/dark) с зелёно-бирюзовыми акцентами
+    и PCB-платой (cnteal). Цвет с парной текстурированной модели (позиции
+    граней 1:1, прямой попиксельный перенос по UV с денойзом по 5
+    соседям). Родная плита чистая — оставлена; каталог plate=None. Модель
+    отнормирована до макс. габарита 1.0. Прежние присланные для этого узла
+    GLB были копией deactotron_2 — заменены корректным экспортом."""
+    return _load_imported_mesh(_CONCLUSION_MESH_PATH)
+
+
+# =============================================================== WEAPONS
+
+_UEBERLASER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "ueberlaser_mesh.npz")
+
+
+def weapon_ueberlaser(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_Ueberlaser_2_model.glb
+    (7241 верш./14686 треуг., ~258KB; концепт —
+    Weapon_core_Ueberlaser_2.jpg: серебристый гатлинг-лазер в жёлтой
+    А-раме на круглом постаменте, зелёно-жёлтые кольца кассеты стволов,
+    голубые линзы-дула). Цвет с парной текстурированной модели (позиции
+    1:1, топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB) в 4 тега: ubsilver (корпус, AO-оттенки слиты), ubyellow
+    (рама/пояс), ubgreen (кольца стволов), эмиссивный ubglow (циановые
+    линзы). Родная плита чистая (14 пар близких параллельных граней) —
+    оставлена. Модель отнормирована до макс. габарита 1.0, дуло в +Y.
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_UEBERLASER_MESH_PATH)
+
+
+_PLASMATRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "plasmatron_mesh.npz")
+
+
+def weapon_plasmatron(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_Plasmatron_2_model.glb
+    (7410 верш./14956 треуг., ~263KB; концепт —
+    Weapon_core_Plasmatron_2.jpg: белая турель с бронзовыми барабанами и
+    раскалённым красным гофростволом на круглом бело-бронзовом
+    постаменте). Цвет с парной текстурированной модели (позиции 1:1,
+    топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB) в 3 тега: plwhite (корпус/постамент), plbronze (барабаны,
+    AO-оттенки слиты в один), plglow (эмиссивная красная спираль ствола).
+    Родная плита относительно чистая (16 пар близких параллельных граней)
+    — оставлена. Модель отнормирована до макс. габарита 1.0, ствол в +Y.
+    Собственная плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_PLASMATRON_MESH_PATH)
+
+
+_HYPERSPHERE_DRIVER_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "hypersphere_driver_mesh.npz")
+
+
+def weapon_hypersphere_driver(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Weapon_core_HypersphereDriver_2_model.glb
+    (7491 верш./15218 треуг., ~267KB, без цвета; концепт —
+    Weapon_core_HypersphereDriver_2.jpg: тёмная турель-пушка на круглом
+    постаменте, сзади гроздь латунных сфер-накопителей, ствол-объектив с
+    синим свечением). Цвет с парной текстурированной модели (позиции 1:1,
+    топология чуть другая — голосование по 5 ближайшим граням,
+    linear->sRGB). Серые AO-оттенки корпуса слиты в общий тег nmgun (тот
+    же тёмный ганметал, что у Nanomanipulator), сферы — hsbrass, синее
+    свечение линзы — эмиссивный hsglow. Родная плита-постамент чистая —
+    оставлена. Модель отнормирована до макс. габарита 1.0, дуло в +Y по
+    конвенции оружия. Собственная плита уже в меше — общая плита каталога
+    отключена (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_HYPERSPHERE_DRIVER_MESH_PATH)
+
+
+_NANOMANIPULATOR_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "nanomanipulator_mesh.npz")
+
+
+def weapon_nanomanipulator(seed=0):
+    """Заменяет прежнюю процедурную версию (рупор из дисков) — геометрия
+    из низкополигонального референса Weapon_core_Nanomanipulator_2_model.glb
+    (7387 верш./14926 треуг., ~262KB, без цвета; концепт —
+    Weapon_core_Nanomanipulator_2_concept.png: тёмная турель-бур с
+    розовыми светящимися кольцами). Цвет с парной текстурированной модели
+    (та же геометрия 1:1 по положению, топология чуть другая —
+    голосование по 5 ближайшим граням, linear->sRGB). Серые AO-оттенки
+    корпуса слиты в один тег nmgun (урок InvasionModule), розовое
+    свечение — nmglow (эмиссия). Родная плита чистая (8 пар близких
+    параллельных граней) — оставлена. Модель отнормирована до макс.
+    габарита 1.0, дуло развёрнуто в +Y (конвенция оружия). Собственная
+    плита уже в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_NANOMANIPULATOR_MESH_PATH)
+
+
+# ================================================================== AUX
+
+def aux_colonizer(seed=0):
+    """Колонизатор-диорама (реф Aux_Colonizer), скомпонована по грани плиты:
+    panel-a вдоль грани d; drum-a и engine-a — параллельные агрегаты вдоль
+    оси X, торцами упёртые в panel-a, drum-a боком у грани c, engine-a
+    боком у drum-a; dome-a у грани a; tank-a у второго торца drum-a;
+    rack-a/шкаф/rack-b — группа вдоль оси a между tank-a и торцом engine-a;
+    clamp-a стоит на ребре вдоль грани b рядом с tank-a, из него выходят
+    hose-a/hose-b, огибающие rack-группу; egg-a/b/c в углу a-b вдоль грани
+    b, mini-a..f вторым рядом за ними, ring-a (лежит плашмя) — следом за
+    mini-рядом; флаг в углу c-d."""
+    P = []
+    Z = PLATE_TOP
+    half = 0.85
+
+    def xcyl(vf, x, y, z, tag):
+        P.append(_p(tf(tf(vf, ry=PI / 2), t=(x, y, z)), tag))
+
+    # --- panel-a: вдоль грани d (левая грань, тянется по Y)
+    panel_thick = 0.07
+    px = -half + panel_thick / 2          # -0.815
+    panel_inner_x = -half + panel_thick   # -0.78 (лицевая сторона панели)
+    py = 0.28
+    plen = 1.05
+    # панель стоит ребром на подложке (нижняя кромка на Z = уровень плиты)
+    P.append(_p(tf(box(panel_thick, plen, 0.62), t=(px, py, Z + 0.31)),
+                'graph'))
+    for dz in (0.61, 0.01):
+        P.append(_p(tf(box(0.1, plen + 0.04, 0.05), t=(px, py, Z + dz)),
+                    'copper'))
+    for sgn in (-1, 1):
+        P.append(_p(tf(box(0.1, 0.05, 0.64),
+                       t=(px, py + sgn * (plen / 2 - 0.01), Z + 0.31)),
+                    'copper'))
+    for k in range(8):
+        P.append(_p(tf(box(0.09, 0.05, 0.4),
+                       t=(px + 0.02, py - plen / 2 + 0.08 + k * (plen - 0.16)
+                          / 7, Z + 0.23)), 'dark'))
+    P.append(_p(tf(box(0.05, 0.24, 0.16),
+                   t=(px + 0.06, py + plen / 2 - 0.22, Z + 0.49)), 'bglow'))
+    for k, tag in enumerate(('teal', 'yellow', 'blue')):
+        yy = py + plen / 2 - 0.3 + k * 0.09
+        P.append(_p(arc_pipe((px, yy, Z + 0.59), (px, yy, Z + 0.55),
+                             (0.05, 0, 0.05), 0.012), tag))
+
+    # --- drum-a: параллельно оси X, торцом (dome) к panel-a, боком к грани c
+    drum_r = 0.21
+    drum_y = half - 0.23 - 0.02             # 0.60 — у грани c (с учётом макс. радиуса торцевых колец 0.23)
+    drum_dome_x = panel_inner_x + drum_r   # торец у панели
+    # исходные относительные смещения (от dome-центра исходного рецепта)
+    drum_rel = (0.0, 0.12, 0.34, 0.56, 0.72, 0.75)
+    d0 = drum_dome_x
+    P.append(_p(tf(tf(dome(0.21, 14, 7), ry=-PI / 2),
+                   t=(d0 + drum_rel[0], drum_y, Z + 0.34)), 'silver'))
+    drum_segs = ((0.12, 0.21, 0.2), (0.34, 0.23, 0.2), (0.56, 0.21, 0.18),
+                (0.72, 0.18, 0.14))
+    for (rel, rr, ww) in drum_segs:
+        xcyl(cyl(rr, ww, 16), d0 + rel, drum_y, Z + 0.34, 'silver')
+        xcyl(torus(rr, 0.02, 16, 6), d0 + rel + ww / 2, drum_y, Z + 0.34,
+             'plat')
+    drum_end_x = d0 + 0.72 + 0.14 / 2      # правый торец барабана
+    xcyl(cyl(0.12, 0.06, 12), drum_end_x + 0.06, drum_y, Z + 0.34, 'graph')
+    drum_end_x += 0.12
+    # панелька-люк на барабане
+    P.append(_p(tf(box(0.12, 0.02, 0.1),
+                   t=(d0 + 0.34, drum_y - 0.23, Z + 0.36)), 'coil2'))
+    for rel in (0.0, 0.56):
+        P.append(_p(tf(box(0.12, 0.3, 0.18),
+                       t=(d0 + rel, drum_y, Z + 0.09)), 'plat'))
+
+    # --- engine-a: параллельно, торцом (dome) к panel-a, боком к drum-a
+    engine_dome_r = 0.15
+    engine_r = 0.17
+    engine_y = drum_y - drum_r - engine_r - 0.02   # 0.22 — сторона к drum
+    engine_dome_x = panel_inner_x + engine_dome_r
+    e0 = engine_dome_x
+    # исходные относительные смещения от dome-центра (было xx=-0.2)
+    def erel(orig_xx):
+        return orig_xx - (-0.2)
+
+    P.append(_p(tf(tf(dome(0.15, 12, 6), ry=-PI / 2),
+                   t=(e0, engine_y, Z + 0.26)), 'green'))
+    # стеклянная секция в зелёной клетке, удлинена для симметрии с drum-a
+    cage_len = 0.62
+    xcyl(cyl(0.15, cage_len, 14), e0 + 0.05 + cage_len / 2, engine_y,
+         Z + 0.26, 'glass')
+    xcyl(cyl(0.095, cage_len - 0.04, 10), e0 + 0.05 + cage_len / 2, engine_y,
+         Z + 0.26, 'detail')
+    for f in (0.06, 0.36, 0.66):
+        xcyl(cyl(0.17, 0.055, 14), e0 + 0.05 + f, engine_y, Z + 0.26,
+             'green')
+    for roll in np.linspace(0, 2 * PI, 6, endpoint=False):
+        P.append(_p(tf(box(cage_len + 0.02, 0.042, 0.042),
+                       t=(e0 + 0.05 + cage_len / 2,
+                          engine_y + 0.163 * math.cos(roll),
+                          Z + 0.26 + 0.163 * math.sin(roll))), 'green'))
+    cage_end_x = e0 + 0.05 + cage_len
+    # серебристый воротник + нос
+    xcyl(cyl(0.14, 0.05, 12), cage_end_x + 0.025, engine_y, Z + 0.26,
+         'silver')
+    xcyl(cyl(0.125, 0.09, 12, r2=0.085), cage_end_x + 0.115, engine_y,
+         Z + 0.26, 'green')
+    nose_c = cage_end_x + 0.16 + 0.1
+    xcyl(cyl(0.09, 0.2, 12, r2=0.045), nose_c, engine_y, Z + 0.26, 'green')
+    engine_end_x = nose_c + 0.1            # кончик носа
+    # ложементы
+    for xx in (e0 + 0.3, cage_end_x - 0.1):
+        P.append(_p(tf(box(0.1, 0.26, 0.14), t=(xx, engine_y, Z + 0.07)),
+                    'plat'))
+
+    # --- геокупол со шлюзом: максимально к грани a
+    dome_r = 0.34
+    ddx, ddy = -0.38, -half + dome_r + 0.03   # к грани a
+    P.append(_p(tf(cyl(dome_r * 1.05, 0.06, 18), t=(ddx, ddy, Z + 0.03)),
+                'silver'))
+    g, fr = _geodome_dev(dome_r)
+    P.append(_p(tf(g, t=(ddx, ddy, Z + 0.06)), 'glass'))
+    P.append(_p(tf(fr, t=(ddx, ddy, Z + 0.06)), 'silver'))
+    # --- gate-a: восьмигранный модуль-шлюз правее купола
+    gx, gy_ = ddx + dome_r + 0.16, ddy
+    P.append(_p(tf(tf(cyl(0.11, 0.08, 8), rx=PI / 2), t=(gx, gy_, Z + 0.14),
+                   rz=PI / 8), 'plat'))
+    P.append(_p(tf(tf(cyl(0.07, 0.1, 8), rx=PI / 2),
+                   t=(gx, gy_ - 0.01, Z + 0.14), rz=PI / 8), 'graph'))
+    P.append(_p(tf(tf(cyl(0.04, 0.03, 8), rx=PI / 2),
+                   t=(gx, gy_ - 0.05, Z + 0.14), rz=PI / 8), 'bglow'))
+
+    # --- tank-a: у второго (правого) торца drum-a
+    tank_r = 0.12
+    tank_x = drum_end_x + tank_r + 0.02
+    tank_y = drum_y
+    P.append(_p(tf(cyl(tank_r, 0.42, 14), t=(tank_x, tank_y, Z + 0.21)),
+                'wood'))
+    P.append(_p(tf(cyl(tank_r + 0.01, 0.06, 14), t=(tank_x, tank_y, Z + 0.45)),
+                'graph'))
+    P.append(_p(tf(box(0.1, 0.06, 0.04), t=(tank_x, tank_y, Z + 0.5)),
+                'plat'))
+
+    # --- rack-a / шкаф / rack-b: компактная группа, оси a (X), у грани b;
+    # связана короткими кабелями с tank-a и торцом engine-a
+    rack_hw, cab_hw = 0.05, 0.07
+    rack_row_y = engine_y + 0.1
+    rack_a_x = 0.5
+    cab_x = rack_a_x + rack_hw + cab_hw + 0.02
+    rack_b_x = cab_x + cab_hw + rack_hw + 0.02   # <= half(0.85) - rack_hw
+
+    def rack(cx, cy, hh):
+        P.append(_p(tf(box(rack_hw * 2, 0.13, hh), t=(cx, cy, Z + hh / 2)),
+                    'copper'))
+        for j in range(4):
+            P.append(_p(tf(box(rack_hw * 1.5, 0.02, 0.05),
+                           t=(cx - rack_hw * 0.05, cy - 0.065,
+                              Z + 0.08 + j * hh / 4.5)), 'dark'))
+            P.append(_p(tf(box(rack_hw * 1.3, 0.015, 0.03),
+                           t=(cx - rack_hw * 0.08, cy - 0.068,
+                              Z + 0.08 + j * hh / 4.5)), 'white'))
+
+    rack(rack_a_x, rack_row_y, 0.5)
+    rack(rack_b_x, rack_row_y, 0.44)
+    # шкаф с полками за матовым (полупрозрачным) стеклом
+    cab_h = 0.46
+    P.append(_p(tf(box(cab_hw * 2, 0.15, cab_h), t=(cab_x, rack_row_y, Z +
+                                                     cab_h / 2)), 'dark'))
+    P.append(_p(tf(box(cab_hw * 1.8, 0.02, cab_h * 0.9),
+                   t=(cab_x, rack_row_y - 0.075, Z + cab_h / 2)), 'glass'))
+    for j in range(3):
+        P.append(_p(tf(box(cab_hw * 1.6, 0.1, 0.02),
+                       t=(cab_x, rack_row_y, Z + 0.1 + j * cab_h / 3)),
+                    'plat'))
+    # короткие кабели-перемычки: tank-a -> rack-a, торец engine-a -> rack-b
+    P.append(_p(tube(np.array([(tank_x + tank_r * 0.6, tank_y, Z + 0.2),
+                               (rack_a_x - rack_hw, rack_row_y, Z + 0.2)]),
+                     0.022, 6), 'plat'))
+    P.append(_p(tube(np.array([(engine_end_x, engine_y, Z + 0.15),
+                               (rack_b_x - rack_hw, rack_row_y, Z + 0.15)]),
+                     0.022, 6), 'plat'))
+
+    # --- clamp-a: вдоль грани b, у tank-a, стоит на длинном ребре
+    clamp_x = tank_x + tank_r + 0.1
+    clamp_y = tank_y
+    P.append(_p(tf(box(0.16, 0.2, 0.3), t=(clamp_x, clamp_y, Z + 0.15)),
+                'white'))
+    P.append(_p(tf(box(0.18, 0.22, 0.05), t=(clamp_x, clamp_y, Z + 0.31)),
+                'silver'))
+
+    # --- hose-a/hose-b: выходят из clamp-a одним торцом, огибают сверху
+    # rack-группу (rack-a и rack-b)
+    for k, (target_x, ry) in enumerate(((rack_a_x, rack_row_y),
+                                        (rack_b_x, rack_row_y))):
+        R = 0.16 + 0.04 * k
+        ts = np.linspace(0, PI, 14)
+        path = np.array([
+            (clamp_x - t / PI * (clamp_x - target_x),
+             clamp_y - (clamp_y - ry) * (t / PI),
+             Z + 0.3 + R * 1.2 * math.sin(t))
+            for t in ts])
+        P.append(_p(tube(path, 0.032, 9), 'gold'))
+        for pt in (path[0], path[-1]):
+            P.append(_p(tf(cyl(0.042, 0.06, 9),
+                           t=(pt[0], pt[1], pt[2] - 0.025)), 'silver'))
+
+
+    # --- egg-a/b/c: угол граней a-b, далее вдоль грани b
+    egg_r = 0.085
+    egg_x = half - egg_r - 0.04
+    egg_y0 = -half + egg_r + 0.04
+    for k in range(3):
+        ex, ey = egg_x, egg_y0 + k * (2 * egg_r + 0.06)
+        P.append(_p(tf(cyl(0.06, 0.03, 10), t=(ex, ey, Z + 0.015)), 'plat'))
+        P.append(_p(tf(sphere(egg_r, 10, 8), t=(ex, ey, Z + 0.12),
+                       s=(1, 1, 1.25)), 'teal'))
+
+    # --- mini-a..f: следующий ряд за яйцами, вдоль грани b (интерьер)
+    mini_x0 = egg_x - 0.22
+    mini_defs = (('blue', 0.3), ('teal', 0.26), ('graph', 0.34),
+                ('coil', 0.16), ('yellow', 0.22), ('white', 0.12))
+    for k, (tag, hh) in enumerate(mini_defs):
+        col = k % 2
+        row = k // 2
+        mx = mini_x0 - col * 0.11
+        my = egg_y0 + row * (2 * egg_r + 0.06)
+        P.append(_p(tf(box(0.055, 0.05, hh), t=(mx, my, Z + hh / 2)), tag))
+        P.append(_p(tf(box(0.04, 0.035, 0.02), t=(mx, my, Z + hh + 0.01)),
+                    'dark'))
+        if col == 0:
+            P.append(_p(tf(cyl(0.005, 0.07, 5), t=(mx, my, Z + hh + 0.05)),
+                        'silver'))
+
+    # --- ring-a: лежит плашмя, следом за рядом mini вдоль грани b
+    ring_y = egg_y0 + 3 * (2 * egg_r + 0.06)
+    ring_x = mini_x0 - 0.05
+    P.append(_p(tf(torus(0.13, 0.05, 8, 6), t=(ring_x, ring_y, Z + 0.05)),
+                'green'))
+    P.append(_p(tf(torus(0.09, 0.035, 8, 6), t=(ring_x, ring_y, Z + 0.11)),
+                'green'))
+
+    # --- флагшток с латунным рваным флагом (угол граней d-a)
+    fx, fy = -half + 0.08, -half + 0.08
+    P.append(_p(tf(cyl(0.016, 1.05, 8), t=(fx, fy, Z + 0.52)), 'silver'))
+    P.append(_p(tf(sphere(0.03, 8, 6), t=(fx, fy, Z + 1.06)), 'silver'))
+    P.append(_p(tf(box(0.24, 0.02, 0.15), t=(fx + 0.13, fy, Z + 0.93)),
+                'coil2'))
+    P.append(_p(tf(box(0.08, 0.02, 0.09), t=(fx + 0.28, fy, Z + 0.96),
+                   rz=0.15), 'coil2'))
     return merge(P)
 
-# --- STAR LANE DRIVE: горизонтальный драйв, обмотанный трубами --------------
-def star_lane(level, seed=0, with_platform=True):
-    P = platform(1.7, with_platform)
-    zc = 0.55
-    P.append(_p(tf(cyl(0.3, 1.0, 18), t=(0, -0.05, zc), rx=PI/2), 'white'))
-    P.append(_p(tf(sphere(0.3, 16, 9), t=(0, -0.55, zc)), 'white'))
-    col = 'blue' if level == 1 else ('teal' if level == 2 else 'coil')
-    rng = np.random.default_rng(level*13)
-    for i in range(4 + level):
-        a0 = rng.uniform(0, 2*PI)
-        path = []
-        for t in np.linspace(0, 1.6*PI, 26):
-            rr = 0.38 + 0.05*math.sin(3*t + a0)
-            path.append((rr*math.cos(t+a0), 0.28*math.sin(0.8*t + a0) - 0.05, zc + rr*math.sin(t+a0)))
-        P.append(_p(tube(np.array(path), 0.075, 10), col if i % 2 == 0 else 'white'))
-    P += nozzle((0, 0.52, zc), PI, r=0.24, tag_body='hull_b')
-    return merge(P)
 
-# --- GENERATOR: 1в1 по референсам -------------------------------------------
-def generator(level, seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    if level == 1:  # Proton Shaver
-        P.append(_p(tf(cyl(0.06, 1.25, 10), t=(0,0,0.75)), 'hull'))
-        for z in (0.45, 0.75, 1.05):
-            P.append(_p(tf(helix_coil(0.16, 0.24, 5, 0.04), t=(0,0,z)), 'coil'))
-        P.append(_p(tf(sphere(0.11, 12, 7), t=(0,0,1.42)), 'blue'))
-        for dx, dy in ((0.52,0.52),(-0.52,0.52),(0.52,-0.52),(-0.52,-0.52)):
-            P.append(_p(tf(cyl(0.045, 0.5, 8), t=(dx,dy,0.4)), 'hull'))
-            P.append(_p(tf(helix_coil(0.1, 0.2, 4, 0.032), t=(dx,dy,0.48)), 'coil'))
-            P.append(_p(tf(sphere(0.065, 10, 6), t=(dx,dy,0.72)), 'blue'))
-            P.append(_p(arc_pipe((dx,dy,0.3),(0,0,0.4),(0,0,0.12), 0.025), 'gold'))
-    elif level == 2:  # Subatomic Scoop: конус в чешуе + белая воронка
-        P.append(_p(tf(cyl(0.55, 0.35, 22, r2=0.42), t=(0,0,0.37)), 'blue'))
-        P.append(_p(tf(cyl(0.42, 0.4, 22, r2=0.22), t=(0,0,0.75)), 'teal'))
-        P.append(_p(tf(cyl(0.14, 0.25, 14), t=(0,0,1.05)), 'hull'))
-        P.append(_p(tf(revolve([(0.1,0.0),(0.48,0.3),(0.54,0.32),(0.5,0.34),(0.16,0.12),(0.12,0.14),(0.08,0.06)], 26), t=(0,0,1.1)), 'white'))
-        for a in np.linspace(0, 2*PI, 4, endpoint=False):
-            x, y = 0.5*math.cos(a), 0.5*math.sin(a)
-            P.append(_p(tf(helix_coil(0.075, 0.32, 4, 0.028), t=(x,y,0.4), rx=0.3*math.sin(a), ry=0.3*math.cos(a)), 'coil'))
-    elif level == 3:  # Quark Express: тумба + жёлтый пояс + Y-развилка с катушками
-        P.append(_p(tf(cyl(0.58, 0.4, 24), t=(0,0,0.38)), 'blue'))
-        P.append(_p(tf(torus(0.56, 0.06, 30, 10), t=(0,0,0.3)), 'gold'))
-        P.append(_p(tf(torus(0.5, 0.045, 28, 8), t=(0,0,0.55)), 'gold'))
-        P.append(_p(tf(sphere(0.46, 20, 11), t=(0,0,0.8), s=(1,1,0.7)), 'teal'))
-        for sgn in (-1, 1):
-            P.append(_p(tf(cyl(0.15, 0.55, 14), t=(sgn*0.38,0,1.3), ry=sgn*PI/4.5), 'white'))
-            P.append(_p(tf(helix_coil(0.18, 0.45, 5, 0.038), t=(sgn*0.4,0,1.32), ry=sgn*PI/4.5), 'coil'))
-            P.append(_p(tf(cyl(0.17, 0.06, 14), t=(sgn*0.55,0,1.48), ry=sgn*PI/4.5), 'gold'))
-    elif level == 4:  # Van Creeg Hypersplicer: стеклянный купол + 2 катушки-антенны
-        P.append(_p(tf(cyl(0.6, 0.14, 26), t=(0,0,0.2)), 'hull'))
-        P.append(_p(tf(dome(0.58, 28, 11), t=(0,0,0.26), s=(1,1,0.85)), 'glass'))
-        P.append(_p(tf(sphere(0.16, 14, 8), t=(0,0,0.55)), 'accent'))
-        P.append(_p(tf(torus(0.59, 0.05, 30, 10), t=(0,0,0.25)), 'detail'))
-        for sgn in (-1, 1):
-            P.append(_p(tf(cyl(0.07, 0.8, 10), t=(sgn*0.5,-0.1,0.9), ry=sgn*PI/4), 'hull'))
-            P.append(_p(tf(helix_coil(0.12, 0.6, 6, 0.032), t=(sgn*0.52,-0.1,0.92), ry=sgn*PI/4), 'coil'))
-            P.append(_p(tf(sphere(0.08, 10, 6), t=(sgn*0.78,-0.1,1.16)), 'blue'))
-    else:  # Nanotwirler: лежащая восьмёрка колец + катушка сбоку
-        for sgn in (-1, 1):
-            for zz in (0.3, 0.5):
-                P.append(_p(tf(torus(0.34, 0.13, 30, 12), t=(sgn*0.29, sgn*0.08, zz)), 'coil2'))
-        P.append(_p(tf(sphere(0.11, 12, 7), t=(0, 0, 0.58)), 'hull'))
-        P.append(_p(tf(helix_coil(0.08, 0.5, 6, 0.03), t=(0.55, -0.45, 0.35), ry=PI/2, rz=PI/4), 'coil'))
-        P.append(_p(tf(cyl(0.03, 0.5, 6), t=(0.55, -0.45, 0.32), ry=PI/2, rz=PI/4), 'hull'))
-    return merge(P)
+def _geodome_dev(r, seg=14, rings=6):
+    """Мини-геокупол для устройств: (стекло, каркас)."""
+    glass = dome(r, seg, rings)
+    parts = []
+    for rr in np.linspace(0.95, 0.4, 3):
+        z = r * math.sqrt(max(1 - rr * rr, 0))
+        parts.append(tf(torus(rr * r, 0.008 + 0.008 * r, 16, 5), t=(0, 0, z)))
+    for a in np.linspace(0, 2 * PI, 6, endpoint=False):
+        path = [(r * math.cos(t) * math.cos(a), r * math.cos(t) * math.sin(a),
+                 r * math.sin(t)) for t in np.linspace(0.05, PI / 2, 7)]
+        parts.append(tube(np.array(path), 0.008 + 0.008 * r, 5))
+    return glass, combine_vf(parts)
 
-# --- SHIELD ------------------------------------------------------------------
-def shield(level, seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    if level == 1:  # Ion Wrap: сцепленные кольца + лента
-        P.append(_p(tf(torus(0.46, 0.1, 32, 12), t=(0.05,0,0.3), rx=PI/12), 'gold'))
-        P.append(_p(tf(torus(0.44, 0.1, 32, 12), t=(0,0.05,0.62), rx=PI/2.3), 'coil'))
-        P.append(_p(tf(torus(0.4, 0.09, 32, 12), t=(-0.05,-0.08,0.55), rx=PI/2.8, rz=0.9), 'teal'))
-        P.append(_p(arc_pipe((-0.5,0.3,0.2),(0.5,-0.3,0.2),(0,0,0.55), 0.09), 'white'))
-    elif level == 2:  # Deactotron: пухлый синий тор + оранжевая звезда
-        P.append(_p(tf(torus(0.46, 0.2, 32, 14), t=(0,0,0.4)), 'blue'))
-        P.append(_p(tf(torus(0.46, 0.07, 32, 10), t=(0,0,0.56)), 'teal'))
-        for a in np.linspace(0, 2*PI, 5, endpoint=False):
-            tip = (0.72*math.cos(a), 0.72*math.sin(a), 0.58)
-            P.append(_p(tube(np.array([(0,0,0.68), (tip[0]*0.5, tip[1]*0.5, 0.78), tip]), 0.032, 8), 'accent'))
-        P.append(_p(tf(sphere(0.14, 12, 8), t=(0,0,0.62)), 'gold'))
-    elif level == 3:  # Wave Scatterer: ёж на трёх зелёных ногах
-        P.append(_p(tf(sphere(0.4, 22, 12), t=(0,0,0.85)), 'white'))
-        V, _ = sphere(1.0, 12, 7)
-        seen = set()
-        for v in V:
-            key = tuple((v*4).astype(int))
-            if key in seen: continue
-            seen.add(key)
-            n = v/np.linalg.norm(v)
-            P.append(_p(tube(np.array([0.38*n + (0,0,0.85), 0.62*n + (0,0,0.85)]), 0.022, 6), 'teal'))
-        for a in np.linspace(PI/6, 2*PI+PI/6, 3, endpoint=False):
-            x,y = math.cos(a), math.sin(a)
-            P.append(_p(arc_pipe((x*0.62,y*0.62,0.12),(x*0.22,y*0.22,0.72),(0,0,0.3), 0.055), 'green'))
-        P.append(_p(tf(torus(0.2, 0.04, 18, 8), t=(0,0,0.14)), 'green'))
-    elif level == 4:  # Hyperwave Nullifier ~ Concussion: купол-зонт + катушки-кольца
-        for i, (r, z) in enumerate(((0.42, 0.22), (0.36, 0.34), (0.3, 0.46))):
-            P.append(_p(tf(helix_coil(r, 0.1, 2, 0.045), t=(0,0,z)), 'coil2' if i%2 else 'coil'))
-        for a in np.linspace(0, 2*PI, 6, endpoint=False):
-            path = [(0.62*math.cos(a)*math.sin(t), 0.62*math.sin(a)*math.sin(t), 0.5+0.55*math.cos(t)) for t in np.linspace(0.08, PI/2.1, 10)]
-            P.append(_p(tube(np.array(path), 0.035, 8), 'gold'))
-        P.append(_p(tf(sphere(0.1, 12, 7), t=(0,0,1.08)), 'accent'))
-        P.append(_p(tf(dome(0.56, 24, 9), t=(0,0,0.48), s=(1,1,0.9)), 'glass'))
-    else:  # Nanoshield: ёж + двойное кольцо
-        P.append(_p(tf(sphere(0.34, 20, 11), t=(0,0,0.8)), 'white'))
-        V, _ = sphere(1.0, 12, 7)
-        seen=set()
-        for v in V:
-            key = tuple((v*4).astype(int))
-            if key in seen: continue
-            seen.add(key)
-            n = v/np.linalg.norm(v)
-            P.append(_p(tube(np.array([0.32*n+(0,0,0.8), 0.5*n+(0,0,0.8)]), 0.018, 6), 'pink'))
-        P.append(_p(tf(torus(0.52, 0.06, 32, 10), t=(0,0,0.42), rx=PI/2.6), 'teal'))
-        P.append(_p(tf(torus(0.52, 0.06, 32, 10), t=(0,0,0.42), rx=PI/2.6, rz=2*PI/3), 'gold'))
-        P.append(_p(tf(cyl(0.16, 0.3, 12, r2=0.22), t=(0,0,0.2)), 'graph'))
-    return merge(P)
 
-# --- SCANNER -----------------------------------------------------------------
-def scanner(level, seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    if level == 1:  # Tonklin Frequency Analyzer
-        for (x,y,h) in ((0,0,0.85),(0.38,0.18,0.55),(-0.33,0.24,0.5),(0.14,-0.38,0.46),(-0.28,-0.28,0.42)):
-            P.append(_p(tf(cyl(0.05, h, 8), t=(x,y,0.18+h/2)), 'hull'))
-            P.append(_p(tf(helix_coil(0.11, h*0.72, 6, 0.032), t=(x,y,0.22+h/2)), 'coil'))
-            P.append(_p(tf(sphere(0.06,10,6), t=(x,y,0.25+h)), 'gold'))
-        P.append(_p(arc_pipe((0.38,0.18,0.5),(-0.33,0.24,0.45),(0,0,0.25), 0.02), 'gold'))
-    elif level == 2:  # Subspace Phase Array
-        P.append(_p(tf(cyl(0.18, 0.3, 14, r2=0.28), t=(0,0,0.35)), 'hull'))
-        P.append(_p(tf(revolve([(0.04,0.18),(0.58,0.0),(0.62,0.04),(0.08,0.26)], 30), t=(0,0,0.55)), 'white'))
-        for rz in (0.4, 1.45, 2.5):
-            P.append(_p(tf(cyl(0.02, 1.0, 6), t=(0,0,1.0), rx=PI/3.4, rz=rz), 'gold'))
-        P.append(_p(tf(sphere(0.07, 10, 6), t=(0,0,1.0)), 'accent'))
-        for a in np.linspace(0, 2*PI, 6, endpoint=False):
-            P.append(_p(tf(box(0.08,0.16,0.05), t=(0.45*math.cos(a), 0.45*math.sin(a), 0.2), rz=a), 'coil2'))
-    elif level == 3:  # Aural Cloud Constructor
-        P.append(_p(tf(cyl(0.52, 0.22, 26), t=(0,0,0.28)), 'teal'))
-        P.append(_p(tf(torus(0.5, 0.045, 30, 8), t=(0,0,0.4)), 'gold'))
-        for a in np.linspace(0, 2*PI, 8, endpoint=False):
-            x,y = 0.35*math.cos(a), 0.35*math.sin(a)
-            P.append(_p(tf(cyl(0.1, 0.45, 12), t=(x,y,0.58), rx=PI/7*math.sin(a+PI/2)*(-1), ry=PI/7*math.cos(a+PI/2)), 'blue'))
-            P.append(_p(tf(torus(0.1, 0.02, 12, 6), t=(x*1.15,y*1.15,0.78), rx=-PI/7*math.sin(a+PI/2), ry=PI/7*math.cos(a+PI/2)), 'white'))
-        P.append(_p(tf(sphere(0.16, 14, 8), t=(0,0,0.68)), 'coil'))
-    elif level == 4:  # Hyperwave Tympanum
-        for i, r in enumerate((0.52, 0.45, 0.37)):
-            P.append(_p(tf(revolve([(0.08,0.09),(r,0.05),(r+0.03,0.0),(0.08,-0.05)], 26), t=(0,0,0.36+0.19*i)), 'coil2'))
-        P.append(_p(tf(dome(0.18, 16, 6), t=(0,0,0.85)), 'white'))
-        for a in np.linspace(PI/5, 2*PI, 3, endpoint=False):
-            x,y = 0.58*math.cos(a), 0.58*math.sin(a)
-            P.append(_p(tf(cyl(0.025, 0.65, 6), t=(x,y,0.5)), 'hull'))
-            P.append(_p(tf(sphere(0.06, 10, 6), t=(x,y,0.86)), 'gold'))
-            P.append(_p(tf(cyl(0.05, 0.04, 8), t=(x,y,0.78)), 'coil'))
-    else:  # Nanowave Decoupling Net
-        P.append(_p(tf(cyl(0.22, 0.26, 14, r2=0.13), t=(0,0,0.32)), 'hull'))
-        P.append(_p(tf(revolve([(0.05,0.14),(0.68,0.0),(0.74,0.05),(0.09,0.22)], 32), t=(0,0,0.48), rx=PI/16), 'coil'))
-        P.append(_p(tf(revolve([(0.02,0.08),(0.56,0.0)], 28), t=(0,0,0.54), rx=PI/16), 'blue'))
-        for a in np.linspace(0, 2*PI, 7, endpoint=False):
-            x, y = 0.3*math.cos(a), 0.3*math.sin(a)
-            P.append(_p(tf(torus(0.085, 0.02, 12, 6), t=(x, y*math.cos(PI/16), 0.6 + y*math.sin(PI/16)), rx=PI/16), 'white'))
-        P.append(_p(tf(torus(0.085, 0.02, 12, 6), t=(0, 0, 0.6), rx=PI/16), 'white'))
-    return merge(P)
+_INVASION_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "invasion_module_mesh.npz")
 
-# --- WEAPONS -----------------------------------------------------------------
-def weapon_beam(level, family, seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    if family == 'lazer':  # Ueberlaser
-        L = 0.85 + 0.14*level
-        P.append(_p(tf(box(0.46, 0.5, 0.42), t=(0, -0.42, 0.44)), 'hull'))
-        P.append(_p(tf(box(0.52, 0.16, 0.52), t=(0, -0.42, 0.5)), 'coil2'))
-        P.append(_p(tf(box(0.07, 0.44, 0.6), t=(0.25, -0.38, 0.52), rz=-0.1), 'coil2'))
-        P.append(_p(tf(cyl(0.12, L, 16), t=(0, -0.15 + L/2, 0.52), rx=PI/2), 'white'))
-        for k in range(2+level):
-            P.append(_p(tf(torus(0.145, 0.03, 18, 8), t=(0, 0.05 + k*(L-0.35)/(1+level), 0.52), rx=PI/2), 'graph'))
-        P.append(_p(tf(cyl(0.065, 0.28, 10), t=(0, -0.15 + L + 0.12, 0.52), rx=PI/2), 'teal'))
-        P.append(_p(tf(sphere(0.08, 10, 6), t=(0, -0.15 + L + 0.3, 0.52)), 'accent'))
-    else:  # Plasmatron
-        P.append(_p(tf(sphere(0.4, 22, 12), t=(-0.05, -0.3, 0.58)), 'white'))
-        P.append(_p(tf(torus(0.41, 0.05, 26, 8), t=(-0.05, -0.3, 0.58), rx=PI/2.4), 'gold'))
-        P.append(_p(tf(cyl(0.3, 0.2, 18), t=(-0.05, -0.3, 0.18)), 'graph'))
-        blen = 0.6 + 0.11*level
-        P.append(_p(tf(cyl(0.085, blen, 12), t=(0.05, -0.05 + blen/2, 0.6), rx=PI/2), 'hull'))
-        P.append(_p(tf(helix_coil(0.13, blen*0.85, 5+level, 0.034), t=(0.05, -0.05 + blen/2, 0.6), rx=PI/2), 'coil'))
-        P.append(_p(tf(cyl(0.05, 0.16, 8), t=(0.05, -0.05 + blen + 0.1, 0.6), rx=PI/2), 'teal'))
-        P.append(_p(tf(sphere(0.07, 10, 6), t=(0.05, -0.05 + blen + 0.2, 0.6)), 'accent'))
-    return merge(P)
 
-def weapon_rapid(level, family, seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    if family == 'lazer':  # Hypersphere Driver
-        P.append(_p(tf(sphere(0.42, 24, 13), t=(0.1, -0.25, 0.6)), 'white'))
-        P.append(_p(tf(cyl(0.3, 0.25, 16), t=(0.1, -0.25, 0.2)), 'graph'))
-        n_pods = 5 + level
-        for i, a in enumerate(np.linspace(0, 2*PI, n_pods, endpoint=False)):
-            x, z = 0.34*math.cos(a), 0.34*math.sin(a)
-            P.append(_p(tf(cyl(0.09, 0.3, 10), t=(0.1 + x, 0.18, 0.6 + z), rx=PI/2), 'accent'))
-            P.append(_p(tf(sphere(0.09, 10, 6), t=(0.1 + x, 0.34, 0.6 + z)), 'coil2'))
-        P.append(_p(tf(cyl(0.16, 0.4, 12), t=(0.1, 0.25, 0.6), rx=PI/2), 'hull'))
-        P.append(_p(tf(cyl(0.1, 0.12, 10), t=(0.1, 0.5, 0.6), rx=PI/2), 'dark'))
-    else:  # Nanomanipulator
-        blen = 0.85 + 0.08*level
-        P.append(_p(tf(cyl(0.09, blen, 12), t=(0, 0, 0.58), rx=PI/2), 'white'))
-        P.append(_p(tf(helix_coil(0.26, blen*0.85, 4+level, 0.05), t=(0,0,0.58), rx=PI/2), 'pink'))
-        P.append(_p(tf(cyl(0.13, 0.2, 12, r2=0.06), t=(0, blen/2 + 0.08, 0.58), rx=PI/2), 'hull'))
-        P.append(_p(tf(sphere(0.07, 10, 6), t=(0, blen/2 + 0.2, 0.58)), 'accent'))
-        for sgn in (-1, 1):
-            P.append(_p(arc_pipe((sgn*0.4,-0.35,0.14),(sgn*0.4,0.35,0.14),(sgn*0.1,0,0.42), 0.045), 'graph'))
-        P.append(_p(tf(box(0.24,0.3,0.18), t=(0, -blen/2-0.1, 0.5)), 'graph'))
-    return merge(P)
+def _load_imported_mesh(npz_path):
+    """Общий загрузчик для устройств, чья геометрия — готовый меш из
+    внешнего референса (а не процедурная генерация): npz хранит V/F и
+    tag_idx/tag_names (тег материала на грань, см. build_device_sets.MATS).
+    Модель опускается так, чтобы её нижняя точка лежала на уровне плиты."""
+    data = np.load(npz_path)
+    V, F = data["V"], data["F"]
+    tag_idx, tag_names = data["tag_idx"], data["tag_names"]
+    tags = [str(tag_names[i]) for i in tag_idx]
+    V = V.astype(float).copy()
+    V[:, 2] += PLATE_TOP - V[:, 2].min()
+    return V, F.astype(int), tags
 
-# --- AUX ----------------------------------------------------------------------
-def aux(kind, seed=0, with_platform=True):
-    P = platform(1.7, with_platform)
-    if kind == 'colony':  # Colonizer (HQ): купол, бутыль, канистры, панель, труба
-        # бирюзовый купол на белом ободе (передний левый угол)
-        P.append(_p(tf(cyl(0.36, 0.05, 22), t=(-0.35,0.28,0.2)), 'white'))
-        P.append(_p(tf(dome(0.33, 22, 9), t=(-0.35,0.28,0.22)), 'teal'))
-        # зелёная бутыль лежит в центре, горлом к зрителю
-        P.append(_p(tf(cyl(0.17, 0.6, 16, r2=0.13), t=(0.05,0.05,0.52), rx=-PI/2.2, rz=0.35), 'bottle'))
-        P.append(_p(tf(cyl(0.07, 0.24, 12), t=(-0.06,0.3,0.36), rx=-PI/2.2, rz=0.35), 'bottle'))
-        # серебряный ребристый цилиндр-стопка за бутылью
-        P.append(_p(tf(cyl(0.17, 0.55, 16), t=(0.28,-0.18,0.72), rx=-PI/2.5, rz=0.35), 'silver'))
-        for k in range(4):
-            P.append(_p(tf(torus(0.175, 0.02, 18, 6), t=(0.28-0.05*k,-0.18+0.11*k,0.72-0.03*k), rx=-PI/2.5, rz=0.35), 'hull'))
-        # деревянная панель вертикально сзади
-        P.append(_p(tf(box(0.6, 0.06, 0.62), t=(0.18,-0.45,0.48), rz=-0.3), 'wood'))
-        P.append(_p(tf(box(0.45, 0.45, 0.3), t=(0.55,-0.02,0.3), rz=0.3), 'wood'))
-        # золотая труба дугой в платформу
-        P.append(_p(arc_pipe((0.66,0.12,0.2),(0.1,-0.42,0.24),(0,0,0.55), 0.065), 'gold'))
-        # белая ребристая канистра справа-спереди
-        P.append(_p(tf(cyl(0.13, 0.38, 14), t=(0.52,0.35,0.38), rx=0.15), 'white'))
-        P.append(_p(tf(torus(0.135, 0.018, 16, 6), t=(0.52,0.35,0.44), rx=0.15), 'hull_b'))
-        # зелёное стеклянное кольцо перед куполом
-        P.append(_p(tf(torus(0.13, 0.045, 18, 8), t=(-0.08,0.52,0.24)), 'bottle'))
-        # три бирюзовые сферы спереди
-        for dx, dy in ((-0.3,0.62),(-0.14,0.68),(0.02,0.62)):
-            P.append(_p(tf(sphere(0.07, 10, 7), t=(dx,dy,0.24)), 'teal'))
-        # частокол
-        for i in range(5):
-            P.append(_p(tf(cyl(0.025, 0.28+0.05*(i%3), 6, r2=0.001), t=(0.2+0.07*i,0.5-0.02*i,0.32)), 'wood'))
-        # флаг (задний левый угол)
-        P.append(_p(tf(cyl(0.015, 0.9, 6), t=(-0.6,-0.42,0.6)), 'hull'))
-        P.append(_p(tf(box(0.2, 0.02, 0.12), t=(-0.51,-0.42,0.98)), 'wood'))
-    else:  # Invasion Module (HQ): жёлто-зелёный клиновидный дропшип носом к зрителю
-        rzs = -0.5  # нос к нижне-правому углу (+X)
-        def sh(vf, t=(0,0,0), **kw):
-            return tf(tf(vf, **kw), t=t, rz=rzs)
-        # корпус: слоёный клин
-        P.append(_p(sh(box(1.15, 0.5, 0.16), t=(0,0,0.32)), 'ygreen'))
-        P.append(_p(sh(cyl(0.25, 0.9, 4, r2=0.02), t=(0.55,0,0.32), ry=PI/2, rz=PI/4), 'ygreen'))  # нос-клин
-        P.append(_p(sh(box(0.8, 0.36, 0.14), t=(-0.1,0,0.44)), 'dgreen'))
-        P.append(_p(sh(box(0.5, 0.24, 0.12), t=(-0.35,0,0.55)), 'ygreen'))
-        P.append(_p(sh(box(0.3, 0.5, 0.1), t=(-0.5,0,0.4)), 'dgreen'))
-        # крылья-плиты
-        for sgn in (-1,1):
-            P.append(_p(sh(box(0.45, 0.4, 0.05), t=(-0.15, sgn*0.38, 0.42), rz=sgn*0.5), 'dgreen'))
-            P.append(_p(sh(box(0.3, 0.22, 0.06), t=(0.2, sgn*0.3, 0.38), rz=sgn*0.3), 'ygreen'))
-        # красные полосы на корпусе
-        P.append(_p(sh(box(0.12, 0.52, 0.05), t=(0.18,0,0.42)), 'coil'))
-        P.append(_p(sh(box(0.1, 0.38, 0.04), t=(-0.25,0,0.52)), 'coil'))
-        # два малых красно-жёлтых пода перед кораблём
-        for i, (dx, dy) in enumerate(((0.15,-0.55),(-0.2,-0.6))):
-            P.append(_p(tf(box(0.28, 0.16, 0.12), t=(dx,dy,0.24), rz=0.2), 'ygreen'))
-            P.append(_p(tf(box(0.1, 0.17, 0.08), t=(dx,dy,0.32), rz=0.2), 'coil'))
-    return merge(P)
 
-# --- SPECIAL -------------------------------------------------------------------
-def inertia_negator(seed=0, with_platform=True):
-    P = platform(1.6, with_platform)
-    P.append(_p(tf(torus(0.5, 0.08, 34, 12), t=(0,0,0.68), rx=PI/2), 'blue'))
-    P.append(_p(tf(torus(0.5, 0.08, 34, 12), t=(0,0,0.68), rx=PI/2, rz=PI/2), 'teal'))
-    P.append(_p(tf(torus(0.36, 0.05, 28, 10), t=(0,0,0.68), rx=PI/4, rz=PI/4), 'gold'))
-    P.append(_p(tf(sphere(0.24, 18, 10), t=(0,0,0.68)), 'white'))
-    for sgn in (-1,1):
-        P.append(_p(tf(cyl(0.06, 0.45, 8), t=(sgn*0.68,0,0.38), ry=sgn*PI/6), 'hull'))
-        P.append(_p(tf(sphere(0.1,10,6), t=(sgn*0.78,0,0.18)), 'graph'))
-    return merge(P)
+def aux_invasion_module(seed=0):
+    """Десантный штурмовой модуль — геометрия взята из точного
+    низкополигонального референса Aux_core_InvasionModule_3.glb (5723
+    верш./9840 треуг., ~90KB, без цвета в исходнике). Цвет перенесён с
+    Aux_core_InvasionModule_3_texture.glb — той же геометрии с
+    UV+текстурой (грани совпадают 1:1 в исходном порядке, медианное
+    расхождение центров граней ~5e-7 — точное соответствие, без
+    кросс-топологического шума). Ранее цвет ошибочно снимался с
+    высокополигонального Aux_core_InvasionModule_2.glb (другая топология,
+    129MB) методом ближайшей точки — давало шумный "камуфляжный" результат;
+    текстура на точном референсе сняла необходимость в голосовании по
+    соседям, каждая грань раскрашена напрямую по своему UV-сэмплу
+    (linear->sRGB), снэпнутому к ближайшему из реальных цветов модели
+    (tan/teal/redbright/copper/invgray — найдены через k-means, остальные
+    теги палитры исключены). Родная плита референса (1176 граней с
+    почти-совпадающими параллельными плоскостями — давала z-fighting
+    «квадратами» при вращении, плюс зубцы с изнанки) вырезана по связным
+    компонентам и заменена чистым боксом с двумя красными полосами по
+    кромкам в цветах оригинала. Результат сохранён заранее
+    (tools/invasion_module_mesh.npz) и просто грузится здесь. Собственная
+    плита уже есть в меше — общая плита каталога для этого узла отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_INVASION_MESH_PATH)
+
+
+_COLONIZER_NEW_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "colonizer_new_mesh.npz")
+
+
+def aux_colonizer_new(seed=0):
+    """Альтернативная версия Colonizer (не заменяет существующий
+    aux_colonizer) — геометрия из низкополигонального референса
+    Aux_core_Colonizer_low_poly.glb (5763 верш./9871 треуг., ~188KB, без
+    цвета). Цвет перенесён с Aux_core_Colonizer_low_poly_texture.glb —
+    той же геометрии с UV+текстурой (2x масштаб, лица совпадают почти
+    точно: медианное расстояние ближайшей точки ~0.003), поэтому перенос
+    близок к точному, без кросс-топологического шума, как у
+    InvasionModule. K-means по образцам текстуры показал реальную
+    палитру: несколько серых AO-оттенков одного материала (усреднены в
+    один тег colgray), бледно-зелёный двигатель (colgreen), бежевые
+    стойки (coltan), золотистые шланги (colgold), тёмные экраны (dark).
+    Собственная плита уже есть в меше — общая плита каталога для этого
+    узла отключена (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_COLONIZER_NEW_MESH_PATH)
+
+
+
+_LANE_MAGNETRON_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "lane_magnetron_mesh.npz")
+
+
+def aux_lane_magnetron(seed=0):
+    """Заменяет прежнюю процедурную версию — геометрия из
+    низкополигонального референса Aux_core_LaneMagnetron_3.glb (4394
+    верш./10792 треуг., ~179KB, без цвета; более чистая ретопология,
+    чем у версии 2). Цвет перенесён с Aux_core_LaneMagnetron_3_texture.glb
+    (та же модель, 4096-текстура; топология близкая, но не 1:1 —
+    голосование по 5 ближайшим граням, linear->sRGB) в узкий набор
+    реальных цветов модели (lmgray/lmtan/lmbrass/lmteal/lmglow/lmgreen/
+    dark, найденных k-means). Родная плита-решётка чистая (без
+    почти-совпадающих граней) и оставлена как есть. Модель отнормирована
+    до макс. габарита 1.0 и развёрнута на 90° для витринного ракурса.
+    Собственная плита уже есть в меше — общая плита каталога отключена
+    (device_catalog_core.RECIPES, plate=None)."""
+    return _load_imported_mesh(_LANE_MAGNETRON_MESH_PATH)

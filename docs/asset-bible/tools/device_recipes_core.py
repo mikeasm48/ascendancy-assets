@@ -501,39 +501,22 @@ def shield_wave_scatterer(seed=0):
 
 
 
+_CONCLUSION_MESH_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "conclusion_mesh.npz")
+
+
 def shield_conclusion(seed=0):
-    """Центральное «яйцо» с перламутровыми дольками в тёмной оправе и
-    четыре купольные тумбы на стопках шестерён (реф Shield_conclusion).
-    Гранёный."""
-    P = []
-    Z = PLATE_TOP
-    c = np.array([0, 0, Z + 0.5])
-    # яйцо: перламутровая сфера + тёмные меридианы
-    P.append(_p(tf(sphere(0.4, 18, 12), t=tuple(c), s=(1, 1, 1.3)), 'pearl'))
-    for rzz in (0, PI / 3, 2 * PI / 3):
-        P.append(_p(tf(torus(0.4, 0.028, 20, 6), rx=PI / 2, rz=rzz,
-                       t=tuple(c), s=(1, 1, 1.28)), 'graph'))
-    P.append(_p(tf(torus(0.34, 0.025, 18, 6), t=tuple(c + np.array([0, 0,
-                                                                    -0.3]))),
-                'graph'))
-    # четыре угловые тумбы: стопка шестерён + перламутровый купол
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            x, y = sx * 0.52, sy * 0.52
-            for k in range(4):
-                r = 0.16 - 0.008 * k
-                P.append(_p(tf(cyl(r, 0.05, 14), t=(x, y, Z + 0.04 + k * 0.08)),
-                            'graph'))
-                P.append(_p(tf(torus(r, 0.018, 14, 6),
-                               t=(x, y, Z + 0.07 + k * 0.08)), 'dark'))
-            P.append(_p(tf(cyl(0.17, 0.04, 14), t=(x, y, Z + 0.36)), 'silver'))
-            P.append(_p(tf(dome(0.15, 14, 8), t=(x, y, Z + 0.38)), 'pearl'))
-    # малый купол спереди
-    for k in range(3):
-        P.append(_p(tf(cyl(0.12 - 0.006 * k, 0.045, 12),
-                       t=(0, -0.62, Z + 0.03 + k * 0.07)), 'graph'))
-    P.append(_p(tf(dome(0.11, 12, 7), t=(0, -0.62, Z + 0.24)), 'pearl'))
-    return merge(P)
+    """Импорт Shield_core_conclusion_2_model.glb (15368 треуг.; концепт
+    PRISMGUARD PG-3): центральное «яйцо»-купол и четыре угловые тумбы,
+    увенчанные перламутрово-иридесцентными пузырями (cnbubble — в плоском
+    материале иридесценция передаётся как бледный глянцевый перламутр),
+    в гунметалловой оправе (cnsteel/dark) с зелёно-бирюзовыми акцентами
+    и PCB-платой (cnteal). Цвет с парной текстурированной модели (позиции
+    граней 1:1, прямой попиксельный перенос по UV с денойзом по 5
+    соседям). Родная плита чистая — оставлена; каталог plate=None. Модель
+    отнормирована до макс. габарита 1.0. Прежние присланные для этого узла
+    GLB были копией deactotron_2 — заменены корректным экспортом."""
+    return _load_imported_mesh(_CONCLUSION_MESH_PATH)
 
 
 # =============================================================== WEAPONS

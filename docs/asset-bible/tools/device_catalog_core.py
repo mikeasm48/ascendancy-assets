@@ -57,7 +57,7 @@ RECIPES = [
     ("Shield_wave_scatterer", "Wave Scatterer", "shield",
      'shield_wave_scatterer', None),
     ("Shield_conclusion", "Conclusion", "shield",
-     'shield_conclusion', 'silver'),
+     'shield_conclusion', None),
     # -------- weapons
     ("Weapon_Ueberlaser", "Ueberlaser", "weapon",
      'weapon_ueberlaser', None),

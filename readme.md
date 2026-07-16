@@ -5,12 +5,13 @@ Asset Bible, пайплайн процедурной генерации моде
 бандла моделей.
 
 - `docs/asset-bible/` — стиль, рецепты, инструменты генерации
-- `assets/` — снимок актуального содержимого бандла (`~/.ascendancy/assets`)
 - `VERSION` — semver текущего релиза бандла
-- `tools/sync_assets.sh` — синхронизация локального кэша в `assets/`
+- `tools/release.sh` — полный локальный релиз (sync + build + publish + bump VERSION)
+- `tools/sync_assets.sh` — синхронизация `~/.ascendancy/assets` → `assets/`
 - `tools/build_release_zip.sh` — локальная сборка релизного архива
 
-Релиз публикуется автоматически: PR с обновлённым `assets/` и бампом
-`VERSION` → merge в main → workflow `release-assets.yml` создаёт GitHub
-Release `v<VERSION>` с `models_v<VERSION>.zip` и `assets-manifest.json`.
-Подробности — в `CLAUDE.md`.
+Содержимое бандла (`assets/`) не хранится в git-истории — только как
+GitHub Release asset (иначе история распухала бы на полный объём
+бандла с каждым релизом). Релиз: `tools/release.sh <version>`, дальше
+GitHub Actions сам подключает его в ascendancy-remake. Подробности —
+в `CLAUDE.md`.

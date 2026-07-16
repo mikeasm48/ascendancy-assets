@@ -60,10 +60,39 @@
   (формат имени `<Тип>_core_<Название>_<версия>`), `devices/humans/`
   (по категориям устройств).
 
+## Публикация релизов ассетов
+
+Источник правды по содержимому — локальная папка `~/.ascendancy/assets`
+(туда пишут генераторы). В репо её снимок лежит в `assets/` и попадает
+в GitHub Release автоматически. Версия — semver в файле `VERSION`.
+
+Как выпустить релиз:
+
+1. `tools/sync_assets.sh` — синхронизирует `~/.ascendancy/assets` →
+   `assets/` (rsync --delete; `version.txt` и мусор macOS исключаются).
+2. Поднять версию в `VERSION` (например 1.0.0 → 1.0.1).
+3. PR в main. После merge workflow `release-assets.yml` соберёт
+   `models_v<VERSION>.zip` (внутри всё под префиксом `models/` — так
+   требует AssetDownloader игры), создаст релиз с тегом `v<VERSION>`
+   и приложит готовый `assets-manifest.json`.
+4. Подключение в игру: workflow `update-assets.yml` в ascendancy-remake
+   скачает архив, пересчитает sha256/размер, обновит
+   `src/main/resources/assets-manifest.json` и откроет PR. Он
+   запускается автоматически из шага 3, если в секретах этого репо
+   задан `REMAKE_TRIGGER_TOKEN` (PAT с правом workflow на
+   ascendancy-remake), иначе вручную:
+   `gh workflow run update-assets.yml -R mikeasm48/ascendancy-remake -f version=<VERSION>`
+
+Локальная проверка сборки архива: `tools/build_release_zip.sh`
+(выход в `build/`, в git не попадает).
+
 ## Не коммитить
 
 - `blends/`, `*.blend` — артефакты сборки (в .gitignore)
-- сгенерированные GLB уходят в `~/.ascendancy/assets/` (вне репо)
+- `build/` — локальная сборка релизного архива (в .gitignore)
+- сгенерированные GLB уходят в `~/.ascendancy/assets/` (вне репо);
+  в git их снимок попадает только через `tools/sync_assets.sh` →
+  `assets/` в рамках релизного PR
 
 ## Состояние и следующие задачи (на 2026-07-11)
 

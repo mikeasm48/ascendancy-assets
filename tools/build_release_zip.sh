@@ -26,11 +26,15 @@ if [ -z "$VERSION" ]; then
 fi
 
 ZIP_NAME="models_v${VERSION}.zip"
-ZIP_PATH="$OUT_DIR/$ZIP_NAME"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 mkdir -p "$OUT_DIR" "$STAGE/models"
+# Резолвим в абсолютный путь: сборка архива ниже делает cd в $STAGE,
+# и относительный OUT_DIR (например workflow передаёт "build") после
+# cd резолвился бы уже не от корня репозитория, а от $STAGE.
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"
+ZIP_PATH="$OUT_DIR/$ZIP_NAME"
 rsync -a \
     --exclude 'version.txt' \
     --exclude '.DS_Store' \

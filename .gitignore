@@ -15,4 +15,4 @@ build/
 
 # снимок ~/.ascendancy/assets - НЕ трекается в git (раздувает историю
 # бинарниками), релизится напрямую как GitHub Release, см. CLAUDE.md
-assets/
+ascendancy_release/

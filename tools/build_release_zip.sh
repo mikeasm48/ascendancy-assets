@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Собирает релизный архив models_v<version>.zip из папки assets/ и кладёт
-# рядом assets-manifest.json (формат, который читает ascendancy-remake).
+# Собирает релизный архив models_v<version>.zip из папки
+# ascendancy_release/ и кладёт рядом assets-manifest.json (формат,
+# который читает ascendancy-remake).
 #
 # Внутри архива всё лежит под префиксом models/ - этого требует
 # AssetDownloader в ascendancy-remake (записи без префикса он игнорирует).
@@ -14,10 +15,10 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:-$(tr -d '[:space:]' < "$REPO_ROOT/VERSION")}"
 OUT_DIR="${2:-$REPO_ROOT/build}"
-SRC="$REPO_ROOT/assets"
+SRC="$REPO_ROOT/ascendancy_release"
 
 if [ ! -d "$SRC" ]; then
-    echo "Папка assets/ не найдена - сначала запустите tools/sync_assets.sh" >&2
+    echo "Папка ascendancy_release/ не найдена - сначала запустите tools/sync_assets.sh" >&2
     exit 1
 fi
 if [ -z "$VERSION" ]; then

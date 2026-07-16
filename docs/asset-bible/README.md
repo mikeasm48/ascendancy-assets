@@ -16,6 +16,7 @@
 | [01-device-taxonomy.md](01-device-taxonomy.md) | Общая таксономия устройств — одинакова для всех рас |
 | [02-device-set.md](02-device-set.md) | Генерация набора устройств из DefaultTechCatalog для Humans/Shuffie |
 | [03-building-set.md](03-building-set.md) | Генерация зданий (BuildingType) и орбитальных конструкций (OrbitalCatalog), стили industrial/scifi |
+| [04-ui-style.md](04-ui-style.md) | Стиль "Ascendancy Neo" 2D-интерфейса — цветовые/геометрические токены, типографика, каталог компонентов, assets vs код |
 | [races/humans.md](races/humans.md) | Стилевой кит расы Humans |
 | [races/shuffie.md](races/shuffie.md) | Стилевой кит расы Shuffie |
 | [races/_template.md](races/_template.md) | Шаблон — копируется при добавлении новой расы |

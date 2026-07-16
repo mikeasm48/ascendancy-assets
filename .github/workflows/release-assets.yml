@@ -67,6 +67,12 @@ jobs:
             echo "Запустите вручную: gh workflow run update-assets.yml -R mikeasm48/ascendancy-remake -f version=${VERSION}"
             exit 0
           fi
+          # --ref обязателен: без него gh сначала запрашивает
+          # default branch через GraphQL (repository.defaultBranchRef),
+          # а это требует прав Contents, которых у REMAKE_TRIGGER_TOKEN
+          # нет (только Actions: write + Metadata: read) - именно так и
+          # задумано, минимум прав.
           GH_TOKEN="$TRIGGER_TOKEN" gh workflow run update-assets.yml \
             --repo mikeasm48/ascendancy-remake \
+            --ref main \
             -f version="${VERSION}"

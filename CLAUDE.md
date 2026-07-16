@@ -70,21 +70,32 @@
 
 1. `tools/sync_assets.sh` — синхронизирует `~/.ascendancy/assets` →
    `assets/` (rsync --delete; `version.txt` и мусор macOS исключаются).
-2. Поднять версию в `VERSION` (например 1.0.0 → 1.0.1).
-3. PR в main. После merge workflow `release-assets.yml` соберёт
-   `models_v<VERSION>.zip` (внутри всё под префиксом `models/` — так
-   требует AssetDownloader игры), создаст релиз с тегом `v<VERSION>`
-   и приложит готовый `assets-manifest.json`.
+2. Поднять версию в `VERSION` (semver: patch — фиксы моделей, minor —
+   новый контент без ломающих изменений, major — переименования/
+   удаления путей). Версия сравнивается дословно с локальным
+   `version.txt` игрока — не поднять её значит релиз не подхватится.
+3. PR в main (`assets/` + `VERSION`). После merge workflow
+   `release-assets.yml` соберёт `models_v<VERSION>.zip` (внутри всё под
+   префиксом `models/` — так требует AssetDownloader игры), создаст
+   релиз с тегом `v<VERSION>` и приложит готовый `assets-manifest.json`.
+   Если релиз с таким тегом уже есть (версию забыли поднять) — шаг
+   "Fail if release already exists" оборвёт прогон, тег не
+   перезатирается.
 4. Подключение в игру: workflow `update-assets.yml` в ascendancy-remake
-   скачает архив, пересчитает sha256/размер, обновит
-   `src/main/resources/assets-manifest.json` и откроет PR. Он
-   запускается автоматически из шага 3, если в секретах этого репо
-   задан `REMAKE_TRIGGER_TOKEN` (PAT с правом workflow на
-   ascendancy-remake), иначе вручную:
-   `gh workflow run update-assets.yml -R mikeasm48/ascendancy-remake -f version=<VERSION>`
+   скачает архив, пересчитает sha256/размер (не доверяет чужому
+   манифесту), обновит `src/main/resources/assets-manifest.json` и
+   откроет PR. Запускается автоматически из шага 3 (секрет
+   `REMAKE_TRIGGER_TOKEN` уже настроен — PAT с правами Actions:write +
+   Metadata:read только на ascendancy-remake). Проверить диф манифеста
+   и смержить PR руками.
 
 Локальная проверка сборки архива: `tools/build_release_zip.sh`
 (выход в `build/`, в git не попадает).
+
+Ручной запуск шага 4, если автотриггер не сработал (`--ref main`
+обязателен — без него `gh workflow run` пытается определить default
+branch через GraphQL, а токену намеренно не даны права на это):
+`gh workflow run update-assets.yml -R mikeasm48/ascendancy-remake --ref main -f version=<VERSION>`
 
 ## Не коммитить
 

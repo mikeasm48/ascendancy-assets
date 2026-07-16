@@ -9,3 +9,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# выход tools/build_release_zip.sh
+build/

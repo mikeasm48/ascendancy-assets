@@ -12,3 +12,7 @@ __pycache__/
 
 # выход tools/build_release_zip.sh
 build/
+
+# снимок ~/.ascendancy/assets - НЕ трекается в git (раздувает историю
+# бинарниками), релизится напрямую как GitHub Release, см. CLAUDE.md
+assets/

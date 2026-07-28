@@ -79,6 +79,10 @@ OrbitalCatalog, у пропсов `PROP_*`), `display_name`, `style`, `kind`
 (`building`/`orbital`/`prop`), `level`. Адресация из игры — по
 `building_id` или индексу (порядок фиксирован каталогом).
 
+Эти же `extras` — вход автомаппинга: если для источника нет файла
+`common/building-designs/<источник>.json`, игра выводит маппинг из них
+сама. См. `05-design-mappings.md`.
+
 ## Контрольные листы
 
 - `renders/preview/approval_buildings_humans_industrial_v1.png`

@@ -35,10 +35,16 @@ from scipy import ndimage
 # REFERENCE_CUBE is the scale key and is not written out as a sprite.
 REFERENCE_CUBE = "_reference_cube"
 
+# These follow the sheet, not the other way round: a re-rolled sheet with a
+# different element in a cell needs this list edited to match, and the count
+# check below is what catches the mismatch. The current list is for
+# Industry_Stat_Details_Collection_4_no_background.png, whose four halls form
+# a real length ladder (1.26 / 1.40 / 1.59 / 2.10 tiles) so the main hall can
+# actually upgrade - the earlier sheets gave three halls of one length.
 INDUSTRY_IDS = [
-    "hall_small", "hall_medium", "hall_wide", "hall_long", REFERENCE_CUBE,
-    "chimney_short", "chimney_tall", "column_cyan", "column_red", "column_yellow",
-    "silo_grey", "silo_pair", "sphere_cyan", "sphere_red", "vat_open", "vat_ribbed",
+    "hall_2w", "hall_3w", "hall_4w", "hall_6w", REFERENCE_CUBE,
+    "chimney_short", "chimney_tall", "column_teal", "column_red", "column_yellow",
+    "silo_grey", "silo_pair", "sphere_teal", "sphere_pink", "vat_open",
     "gantry_truss", "pipe_bridge", "cooling_tower", "power_plant", "tower_slab",
 ]
 
@@ -51,8 +57,9 @@ ALPHA_FLOOR = 40
 MIN_AREA = 400
 # Closing radius that keeps a ribbed body from splitting into rings.
 CLOSE_RADIUS = 5
-# Rows are grouped by rounding the top edge to this many pixels.
-ROW_BAND = 120
+# Two elements belong to the same row when their vertical centres are closer
+# together than this fraction of the taller one's height.
+ROW_TOLERANCE = 0.75
 
 # Canvas units per grid tile in the game's definitions. The reference cube
 # is one tile wide, so its pixel width maps to this many units.
@@ -66,11 +73,19 @@ ANCHOR_Y_MAX = 0.45
 
 
 def find_elements(alpha):
-    """Locate every element on the sheet, in reading order."""
+    """Locate every element on the sheet, in reading order.
+
+    Rows are grouped by how close the elements' vertical centres are, not
+    by banding their top edges. Banding tops looks equivalent and is not:
+    a short chimney standing beside tall distillation towers has its top
+    edge most of its own height lower than theirs, lands in the next band,
+    and sorts after the whole row - which silently shifts every id in that
+    row by one and hands each element its neighbour's sprite.
+    """
     mask = ndimage.binary_closing(
         alpha > ALPHA_FLOOR, structure=np.ones((CLOSE_RADIUS, CLOSE_RADIUS))
     )
-    labels, count = ndimage.label(mask)
+    labels, _ = ndimage.label(mask)
     boxes = []
     for index, slices in enumerate(ndimage.find_objects(labels), start=1):
         rows, columns = slices
@@ -78,8 +93,27 @@ def find_elements(alpha):
             continue
         boxes.append((columns.start, rows.start,
                       columns.stop - columns.start, rows.stop - rows.start))
-    boxes.sort(key=lambda box: (round(box[1] / ROW_BAND), box[0]))
-    return boxes
+    if not boxes:
+        return []
+
+    def centre(box):
+        return box[1] + box[3] / 2.0
+
+    boxes.sort(key=centre)
+    rows_of = [[boxes[0]]]
+    for box in boxes[1:]:
+        previous = rows_of[-1][-1]
+        limit = max(box[3], previous[3]) * ROW_TOLERANCE
+        if abs(centre(box) - centre(previous)) > limit:
+            rows_of.append([box])
+        else:
+            rows_of[-1].append(box)
+
+    ordered = []
+    for row in rows_of:
+        row.sort(key=lambda box: box[0])
+        ordered.extend(row)
+    return ordered
 
 
 def guess_anchor_y(width, height):

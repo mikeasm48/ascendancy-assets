@@ -82,6 +82,14 @@
 непокрытых технологий — заглушки семейств из
 `common/science_tree_stubs/`. Удаление путей = **major** по semver.
 
+`common/widgets/` — арт виджетов планетарного экрана, по папке на
+ячейку: `Eco/`, `Industry/`, `Population/`, `Science/`. Здесь пути
+захардкожены в игре (`EcologyLandscape`, `IndustryCollageRenderer`,
+`PopulationWidget`, `ScienceWidget` в ascendancy-remake) — имена файлов
+менять нельзя, переименование = **major** по semver. Референсы, по
+которым это рисовалось, — в
+`docs/asset-bible/refs/ui/Ascendancy_Screen_Widgets/`.
+
 Пользовательские правки лежат в `~/.ascendancy/building-designs/` и
 `~/.ascendancy/device-mappings/`, то есть **вне** `assets/`: распаковка
 релиза чистит кэш ассетов целиком, и внутри `assets/` они бы не пережили

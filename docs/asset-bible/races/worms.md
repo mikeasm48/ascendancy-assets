@@ -12,9 +12,11 @@
 > `tools/paint_worms_constructors.py` (2026-08-08) — геометрия не тронута,
 > переписаны только индексные буферы: каждый меш разбит на примитивы по зонам.
 >
-> Референсы: `refs/buildings/Worms/*.png` (16 шт.), `refs/ships/Worms/*.png`
-> (18 шт., включая лист деталей `Worms_Ship_Parts.png` — он и есть эталон
-> палитры). Контрольные листы: `renders/preview/approval_buildings_worms_v1.png`,
+> Референсы: `refs/buildings/Worms/` (16 листов), `refs/ships/Worms/`
+> (18 листов, включая `Worms_Ship_Parts` — он и есть эталон палитры).
+> В репо они лежат ужатыми по политике `refs/*/README.md` (≤1024px, JPEG q85);
+> полноразмерные оригиналы — в `~/java/ascendancy-refs-originals/`.
+> Контрольные листы: `renders/preview/approval_buildings_worms_v1.png`,
 > `renders/preview/approval_ships_worms_v1.png`.
 
 ## 1. Стилевая формула

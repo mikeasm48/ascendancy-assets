@@ -7,8 +7,9 @@
 #   B) deprecated Humans: ~/.ascendancy/assets/races/humans/buildings/
 #      building_constructor.glb (белая керамика + бирюза/лайм, бионические
 #      формы) — мелкие групповые пропсы, «инопланетные» доминанты, цвета;
-#   C) refs/buildings/Shuffie/SpaceDock_shuffie_1.glb, SpaceShield_shuffie_1.glb
-#      — орбитальные док и щит (форма как есть, цвета гармонизируются).
+#   C) refs/buildings/Shuffie/SpaceDock_shuffie_1.glb, SpaceDock_shuffie_2.glb,
+#      SpaceShield_shuffie_1.glb — орбитальные доки и щит (форма как есть,
+#      цвета гармонизируются).
 #
 # Гармонизация под флот Shuffie (shipyard_constructor.glb — ЭТАЛОН, не трогаем):
 # флот ахроматичен (белый глянец + графитовые врезки), поэтому золото сета A
@@ -45,7 +46,7 @@ SRC_A = "~/.ascendancy/assets/races/bionics/buildings/building_constructor.glb"
 SRC_B = "~/.ascendancy/assets/races/humans/buildings/building_constructor.glb"
 SRC_SHIPS = "~/.ascendancy/assets/races/bionics/ships/shipyard_constructor.glb"
 SRC_DOCK = os.path.join(REFS_SHUFFIE, "SpaceDock_shuffie_1.glb")
-SRC_DOCK2 = os.path.join(REFS_SHUFFIE, "SpaceShield_shuffie_2.glb")  # органический док
+SRC_DOCK2 = os.path.join(REFS_SHUFFIE, "SpaceDock_shuffie_2.glb")  # органический док
 SRC_SHIELD = os.path.join(REFS_SHUFFIE, "SpaceShield_shuffie_1.glb")
 
 MAX_TEX = 512          # даунскейл цветовых текстур (бюджет размера GLB)

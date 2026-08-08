@@ -46,10 +46,14 @@
 
 ## Подпапка Shuffie/
 
-`SpaceDock_shuffie_1.glb`, `SpaceShield_shuffie_1.glb` — рабочие исходники
-орбитальных конструкций Shuffie (не ужимаются: их читает
-`tools/build_shuffie_building_set.py`; форма используется как есть,
-цвета гармонизируются при сборке).
+`SpaceDock_shuffie_1.glb`, `SpaceDock_shuffie_2.glb` (органический док),
+`SpaceShield_shuffie_1.glb` — рабочие исходники орбитальных конструкций
+Shuffie (не ужимаются: их читает `tools/build_shuffie_building_set.py`;
+форма используется как есть, цвета гармонизируются при сборке).
+
+Второй док до 2026-08-08 назывался `SpaceShield_shuffie_2.glb` — имя не
+соответствовало содержимому (это док, а не щит), генератор и звал его
+`SRC_DOCK2`. Переименован.
 
 ## Подпапка Worms/
 

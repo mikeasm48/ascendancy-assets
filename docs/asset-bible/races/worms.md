@@ -1,16 +1,23 @@
 # Раса: Worms — стилевой кит
 
-> ✅ Сверено с фактическими ассетами (2026-08-08). Раса лежит в
+> ✅ Сверено с фактическими ассетами (2026-08-09). Раса лежит в
 > `~/.ascendancy/assets/races/worms/`:
-> `buildings/worms_building_constructor.glb` (28 узлов, ~23.9 MB)
-> `ships/worms_shipyard_constructor.glb` (35 узлов, ~19.9 MB)
+> `buildings/worms_building_constructor_V2.glb` (28 узлов, ~23.9 MB)
+> `ships/worms_shipyard_constructor_V2.glb` (35 узлов, ~19.9 MB)
 > `orbital_dock/orbital_dock_background.png`.
+> Рядом лежат `*_V1.glb` — покраска от 2026-08-08 до ремонта геометрии.
 >
 > ⚠️ Оба конструктора приехали **без единого материала**: в GLB только
 > `POSITION` + `NORMAL`, ни `materials`, ни `images`, ни `COLOR_0`. В движке это
 > означало ровно белый цвет на всём наборе. Палитра ниже проставлена проходом
 > `tools/paint_worms_constructors.py` (2026-08-08) — геометрия не тронута,
 > переписаны только индексные буферы: каждый меш разбит на примитивы по зонам.
+>
+> ⚠️ Вход пайплайна — **`.blend`**, а не пофайловые `Worms_*.glb`. Каждый кит
+> лежит в `~/Downloads/worms_{buildings,ships}/*.blend` одной коллекцией, и
+> красится именно её экспорт. Пофайловые GLB в тех же папках — другой,
+> POSITION-only экспорт: покраска по ним теряет имена узлов, на которых держатся
+> правила для глаз и `stix` корабельного кита.
 >
 > Референсы: `refs/buildings/Worms/` (16 листов), `refs/ships/Worms/`
 > (18 листов, включая `Worms_Ship_Parts` — он и есть эталон палитры).
@@ -106,22 +113,45 @@ Colony Base, 3 фабрики, 3 орбитальных кинетических
 
 ## 5. Перезапуск
 
+Две стадии: ремонт+экспорт коллекции из `.blend` (нужен Blender), затем
+покраска (чистый numpy/scipy, Blender не нужен).
+
 ```bash
+blender -b ~/Downloads/worms_buildings/worms_building_constructor.blend \
+    -P tools/export_worms_kit.py -- --out /tmp/worms_buildings_raw.glb
 python3 tools/paint_worms_constructors.py \
-    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor.glb \
-    /tmp/worms_buildings.glb --kit buildings --report
-python3 tools/preview_constructor_kit.py /tmp/worms_buildings.glb /tmp/sheet.png
+    /tmp/worms_buildings_raw.glb \
+    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor_V2.glb \
+    --kit buildings --report
+python3 tools/preview_constructor_kit.py \
+    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor_V2.glb \
+    /tmp/sheet.png
 ```
 
-Инструмент идемпотентен по геометрии, но **не** по материалам: он ожидает
-исходный однопримитивный экспорт. Повторный прогон по уже покрашенному файлу
-переразобьёт примитивы заново — результат тот же, но размер файла подрастёт.
-Нужны numpy + scipy + pillow, Blender не требуется.
+Для кораблей — то же с `worms_shipyard_constructor.blend` и `--kit ships`.
+
+`export_worms_kit.py` сваривает совпадающие вершины, выбрасывает вырожденные
+грани и разворачивает нормали наружу штатным `recalc_face_normals`. Ремонт
+обязан жить здесь, а не в красильщике: экспорт даёт ~3 вершины на треугольник
+(плоское затенение расщепляет их), и сварка уже экспортированного буфера
+затенение уничтожит — у 99.6% совпадающих позиций разные нормали. Решать
+«где наружу» по одной геометрии тоже не выходит: на таких открытых оболочках
+объём бессмыслен, а голосование по занятости ошибается чаще экспортёра
+(3.3k плохо ориентированных граней превращались в 4.3k и 24k).
+`recalc_face_normals` трассирует лучи по телу и делает это правильно.
+
+Красильщик идемпотентен по геометрии, но **не** по материалам: он ожидает
+однопримитивный вход. Повторный прогон по уже покрашенному файлу переразобьёт
+примитивы заново — результат тот же, но размер файла подрастёт.
 
 ## 6. Definition of Done
 
 - [x] Все 63 узла (28 зданий + 35 корабельных) несут материалы
-- [x] Геометрия и иерархия узлов не изменились (0 расхождений по треугольникам)
+- [x] Иерархия узлов не изменилась; в V2 геометрия отремонтирована — сварено
+      1488/934 вершин, убрано 20/2 вырожденных граней, развёрнуто наружу
+      3323/20508 граней (зданий/кораблей). Вывернутых граней осталось 194 и 4
+- [x] Распределение зон в V2 совпало с V1 с точностью до долей процента
+      (хитин 212772 → 212695 трисов), то есть ремонт не сдвинул покраску
 - [x] Оба GLB грузятся штатным `GLBLoader` из gdx-gltf (28/35 узлов, 131/111 meshPart)
 - [x] Насыщенность сведена с референсом (0.186–0.188 против 0.182–0.224)
 - [ ] Раса не заведена в игре: нет `Race.WORMS`, `RaceModelSet`, `BuildingEditorSource`

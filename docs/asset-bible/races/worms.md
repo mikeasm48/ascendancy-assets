@@ -2,10 +2,9 @@
 
 > ✅ Сверено с фактическими ассетами (2026-08-09). Раса лежит в
 > `~/.ascendancy/assets/races/worms/`:
-> `buildings/worms_building_constructor_V2.glb` (28 узлов, ~23.9 MB)
-> `ships/worms_shipyard_constructor_V2.glb` (35 узлов, ~19.9 MB)
+> `buildings/worms_building_constructor.glb` (28 узлов, ~22.8 MB)
+> `ships/worms_shipyard_constructor.glb` (35 узлов, ~19.0 MB)
 > `orbital_dock/orbital_dock_background.png`.
-> Рядом лежат `*_V1.glb` — покраска от 2026-08-08 до ремонта геометрии.
 >
 > ⚠️ Оба конструктора приехали **без единого материала**: в GLB только
 > `POSITION` + `NORMAL`, ни `materials`, ни `images`, ни `COLOR_0`. В движке это
@@ -121,10 +120,10 @@ blender -b ~/Downloads/worms_buildings/worms_building_constructor.blend \
     -P tools/export_worms_kit.py -- --out /tmp/worms_buildings_raw.glb
 python3 tools/paint_worms_constructors.py \
     /tmp/worms_buildings_raw.glb \
-    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor_V2.glb \
+    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor.glb \
     --kit buildings --report
 python3 tools/preview_constructor_kit.py \
-    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor_V2.glb \
+    ~/.ascendancy/assets/races/worms/buildings/worms_building_constructor.glb \
     /tmp/sheet.png
 ```
 
@@ -147,11 +146,13 @@ python3 tools/preview_constructor_kit.py \
 ## 6. Definition of Done
 
 - [x] Все 63 узла (28 зданий + 35 корабельных) несут материалы
-- [x] Иерархия узлов не изменилась; в V2 геометрия отремонтирована — сварено
-      1488/934 вершин, убрано 20/2 вырожденных граней, развёрнуто наружу
-      3323/20508 граней (зданий/кораблей). Вывернутых граней осталось 194 и 4
-- [x] Распределение зон в V2 совпало с V1 с точностью до долей процента
-      (хитин 212772 → 212695 трисов), то есть ремонт не сдвинул покраску
+- [x] Иерархия узлов не изменилась; геометрия отремонтирована (2026-08-09) —
+      сварено 1488/934 вершин, убрано 20/2 вырожденных граней, развёрнуто
+      наружу 3323/20508 граней (зданий/кораблей). Вывернутых граней осталось
+      194 и 4
+- [x] Распределение зон после ремонта совпало с прежней покраской с точностью
+      до долей процента (хитин 212772 → 212695 трисов), то есть ремонт сдвинул
+      геометрию, не сдвинув покраску
 - [x] Оба GLB грузятся штатным `GLBLoader` из gdx-gltf (28/35 узлов, 131/111 meshPart)
 - [x] Насыщенность сведена с референсом (0.186–0.188 против 0.182–0.224)
 - [ ] Раса не заведена в игре: нет `Race.WORMS`, `RaceModelSet`, `BuildingEditorSource`

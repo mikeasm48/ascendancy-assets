@@ -1,8 +1,8 @@
 # Раса: Worms — стилевой кит
 
-> ✅ Сверено с фактическими ассетами (2026-08-09). Раса лежит в
+> ✅ Сверено с фактическими ассетами (2026-09-16). Раса лежит в
 > `~/.ascendancy/assets/races/worms/`:
-> `buildings/worms_building_constructor.glb` (28 узлов, ~22.8 MB)
+> `buildings/worms_building_constructorV2.glb` (28 узлов, ~11.4 MB)
 > `ships/worms_shipyard_constructor.glb` (35 узлов, ~19.0 MB)
 > `orbital_dock/orbital_dock_background.png`.
 >
@@ -115,6 +115,10 @@ Colony Base, 3 фабрики, 3 орбитальных кинетических
 Две стадии: ремонт+экспорт коллекции из `.blend` (нужен Blender), затем
 покраска (чистый numpy/scipy, Blender не нужен).
 
+Кит зданий V2 приехал уже покрашенным — палитра запечена в самом `.blend`,
+поэтому для него вторая стадия не нужна и весь отгружаемый файл собирается
+одной командой (см. «Сборка кита зданий V2» ниже).
+
 ```bash
 blender -b ~/Downloads/worms_buildings/worms_building_constructor.blend \
     -P tools/export_worms_kit.py -- --out /tmp/worms_buildings_raw.glb
@@ -128,6 +132,56 @@ python3 tools/preview_constructor_kit.py \
 ```
 
 Для кораблей — то же с `worms_shipyard_constructor.blend` и `--kit ships`.
+
+### Сборка кита зданий V2
+
+Источник: `~/java/ascendancy/ascendancy-refs-originals/models/buildings/worms/`.
+Там лежат обе версии — полный `worms_building_constructorV2.blend` (54 объекта)
+и обрезанная копия `...buildings-only.blend` (28 объектов). Обе дают **побайтно
+один и тот же** отгружаемый файл:
+
+```bash
+# из полного .blend — корабельные узлы отсеиваются по составу корабельного кита
+blender -b .../worms_building_constructorV2.blend -P tools/export_worms_kit.py -- \
+    --out ~/.ascendancy/assets/races/worms/buildings/worms_building_constructorV2.glb \
+    --no-repair --strip-normals \
+    --exclude-shared-with ~/.ascendancy/assets/races/worms/ships/worms_shipyard_constructor.glb
+
+# из обрезанного .blend — исключать уже нечего
+blender -b .../worms_building_constructorV2.buildings-only.blend -P tools/export_worms_kit.py -- \
+    --out ~/.ascendancy/assets/races/worms/buildings/worms_building_constructorV2.glb \
+    --no-repair --strip-normals
+```
+
+`--no-repair` здесь обязателен: геометрия этого `.blend` уже отремонтирована,
+повторный прогон `recalc_face_normals` только внёс бы шум.
+
+Почему файл похудел с 30.4 MB до 11.4 MB:
+
+| шаг | стало |
+|---|---|
+| исходный кит | 30.4 MB, 54 узла, 11 материалов |
+| минус 26 корабельных узлов (и вторая палитра вместе с ними) | 21.2 MB, 28 узлов, 6 материалов |
+| минус аккессоры `NORMAL` | **11.4 MB** |
+
+Корабельные детали попали в кит зданий экспериментом, который признан
+неудачным: они дублировали корабельный набор, причём каждая копия отдельным
+мешем, и занимали треть файла. Вместе с ними ушла и корабельная палитра —
+те самые `Worms_Chitin.001` и прочие `.001`, заметно светлее и холоднее
+строительных (хитин 0.156 против 0.098, кость 0.631 против 0.540). Схлопывать
+их в одноимённые строительные нельзя — это перекрасило бы детали.
+
+⚠️ Три дизайна в `common/building-designs/orfa.json` ссылались на удалённые
+узлы: `GRIDL` → `Worms_Body_Segment_Jaws`, `GRIDL_HABITAT` →
+`Worms_Medium_Claw`, `GRIDL_METROPLEX` → `Worms_Large_Hive_Mound`. Весь жилой
+ряд, по одному `placements[0]/elementId` у каждого. Их надо перевести на
+`Worms_Hive_Dwelling_Gen1..3`, которые ровно для этого и сделаны.
+
+Про `--strip-normals` стоит помнить две вещи. Порядок шагов не переставить:
+Blender-овская галка `export_normals=False` сначала сварила бы углы, и
+достроенные нормали вышли бы сглаженными, а фасетка пропала бы. И это
+единственный шаг пайплайна, который `.blend` выразить не может в принципе —
+он живёт только в скрипте.
 
 `export_worms_kit.py` сваривает совпадающие вершины, выбрасывает вырожденные
 грани и разворачивает нормали наружу штатным `recalc_face_normals`. Ремонт
